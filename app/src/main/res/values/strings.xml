@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">OScan</string>
+    <string name="pick_img_btn">选取图片</string>
+    <string name="apply_btn">应用效果</string>
+</resources>
