@@ -7,11 +7,9 @@
     </style>
 
     <style name="ScanActivity">
-<!--        <item name="android:fitsSystemWindows">true</item>-->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:statusBarColor">@color/colorPrimary</item>
-
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
 
 </resources>

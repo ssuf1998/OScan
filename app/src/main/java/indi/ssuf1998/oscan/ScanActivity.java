@@ -1,26 +1,21 @@
 package indi.ssuf1998.oscan;
 
 import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Rect;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.SparseArray;
 import android.util.SparseIntArray;
-import android.view.DisplayCutout;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
@@ -31,14 +26,12 @@ import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.opencv.osgi.OpenCVNativeLoader;
-
-import indi.ssuf1998.oscan.core.OSCore;
 import indi.ssuf1998.oscan.databinding.ScanActivityMainBinding;
 
 public class ScanActivity extends AppCompatActivity {
@@ -50,8 +43,6 @@ public class ScanActivity extends AppCompatActivity {
     private Preview preview;
     private Camera camera;
 
-    private OSCore osCore = new OSCore();
-
     private final SparseIntArray flashModes = new SparseIntArray() {{
         append(ImageCapture.FLASH_MODE_AUTO, R.drawable.ic_round_flash_auto_24);
         append(ImageCapture.FLASH_MODE_ON, R.drawable.ic_round_flash_on_24);
@@ -62,31 +53,12 @@ public class ScanActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        new OpenCVNativeLoader().init();
 
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 200);
-        }
+        usesPermissions();
 
         binding = ScanActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        Rect rect = new Rect();
-        binding.getRoot().getRootView().getWindowVisibleDisplayFrame(rect);
-        double visibleWinWidth = (double) rect.width();
-        double visibleWinHeight = (double) rect.height();
-        double previewViewHeight = visibleWinWidth / 3 * 4;
-        double remainHeight = visibleWinHeight - previewViewHeight;
-        double topActionBatHeight = remainHeight * 0.43;
-        double bottomActionBatHeight = remainHeight - topActionBatHeight;
-
-        ConstraintLayout.LayoutParams tabLp = (ConstraintLayout.LayoutParams) binding.topActionBar.getLayoutParams();
-        tabLp.height = Math.max(binding.topActionBar.getMinHeight(), (int) topActionBatHeight);
-        binding.topActionBar.setLayoutParams(tabLp);
-        ConstraintLayout.LayoutParams babLp = (ConstraintLayout.LayoutParams) binding.bottomActionBar.getLayoutParams();
-        babLp.height = Math.max(binding.bottomActionBar.getMinHeight(), (int) bottomActionBatHeight);
-        binding.bottomActionBar.setLayoutParams(babLp);
-
+        bindNormalListeners();
 
 //        binding.pickImgBtn.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -117,7 +89,26 @@ public class ScanActivity extends AppCompatActivity {
 //            }
 //        });
 
+    }
 
+    private void usesPermissions() {
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    Const.CAMERA_PERMISSION_REQUEST);
+        }
+    }
+
+    private void bindNormalListeners() {
+        binding.backBtn.setOnClickListener(view -> finish());
+
+    }
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    private void bindCameraListeners() {
+
+        // 摄像头绑定监听
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
@@ -126,72 +117,58 @@ public class ScanActivity extends AppCompatActivity {
             }
         }, ContextCompat.getMainExecutor(this));
 
-        binding.takePicBtn.setOnClickListener(new View.OnClickListener() {
+        // 切换闪光灯模式按钮
+        binding.switchFlashBtn.setOnClickListener(view -> {
+            try {
+                flashNowMode = flashNowMode + 1 >= flashModes.size() ? 0 : flashNowMode + 1;
+                capture.setFlashMode(flashModes.keyAt(flashNowMode));
+                binding.switchFlashBtn.setImageDrawable(ContextCompat.getDrawable(
+                        ScanActivity.this,
+                        flashModes.get(flashNowMode)));
+            } catch (Exception ignore) {
+            }
+        });
+
+        final ObjectAnimator scaleXAnim = ObjectAnimator.ofFloat(
+                binding.takePicBtn,
+                "scaleX", 1f, 0.85f);
+        final ObjectAnimator scaleYAnim = ObjectAnimator.ofFloat(
+                binding.takePicBtn,
+                "scaleY", 1f, 0.85f);
+        final AnimatorSet animSet = new AnimatorSet();
+        animSet.play(scaleXAnim).with(scaleYAnim);
+        animSet.setInterpolator(new DecelerateInterpolator());
+
+        binding.takePicBtn.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                capture.takePicture(
-                        ContextCompat.getMainExecutor(ScanActivity.this),
-                        new ImageCapture.OnImageCapturedCallback() {
-                            @Override
-                            public void onCaptureSuccess(@NonNull ImageProxy image) {
-                                Bitmap bmp = Utils.imgProxy2Bitmap(image);
-
-                                binding.picView.setImageBitmap(bmp);
-                                binding.topActionBar.setVisibility(View.GONE);
-                                binding.bottomActionBar.setVisibility(View.GONE);
-                                binding.previewView.setVisibility(View.GONE);
-                                binding.picView.setVisibility(View.VISIBLE);
-
-                                image.close();
-
-                                try {
-                                    cameraProviderFuture.get().unbindAll();
-                                } catch (Exception ignore) {
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                    scaleXAnim.setFloatValues(binding.takePicBtn.getScaleX(), 1f);
+                    scaleYAnim.setFloatValues(binding.takePicBtn.getScaleY(), 1f);
+                    animSet.setDuration(50);
+                    animSet.start();
+                    capture.takePicture(
+                            ContextCompat.getMainExecutor(ScanActivity.this),
+                            new ImageCapture.OnImageCapturedCallback() {
+                                @Override
+                                public void onCaptureSuccess(@NonNull ImageProxy image) {
+                                    Bitmap bmp = Utils.imgProxy2Bitmap(image);
+                                    image.close();
                                 }
 
+                                @Override
+                                public void onError(@NonNull ImageCaptureException exception) {
+                                    super.onError(exception);
+                                }
                             }
-
-                            @Override
-                            public void onError(@NonNull ImageCaptureException exception) {
-                                super.onError(exception);
-                            }
-                        }
-                );
-            }
-        });
-
-        binding.picView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    bindToCamera(cameraProviderFuture.get());
-                } catch (Exception ignore) {
+                    );
+                } else if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    scaleXAnim.setFloatValues(binding.takePicBtn.getScaleX(), 0.85f);
+                    scaleYAnim.setFloatValues(binding.takePicBtn.getScaleY(), 0.85f);
+                    animSet.setDuration(150);
+                    animSet.start();
                 }
-
-                binding.topActionBar.setVisibility(View.VISIBLE);
-                binding.bottomActionBar.setVisibility(View.VISIBLE);
-                binding.previewView.setVisibility(View.VISIBLE);
-                binding.picView.setVisibility(View.GONE);
-                binding.picView.setImageBitmap(null);
-
-            }
-        });
-
-        binding.switchFlashBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                try {
-                    flashNowMode = flashNowMode + 1 >= flashModes.size() ? 0 : flashNowMode + 1;
-                    cameraProviderFuture.get().unbind(capture);
-                    capture.setFlashMode(flashModes.keyAt(flashNowMode));
-                    cameraProviderFuture.get().bindToLifecycle(ScanActivity.this, cameraSelector, capture);
-                    binding.switchFlashBtn.setImageDrawable(ContextCompat.getDrawable(
-                            ScanActivity.this,
-                            flashModes.get(flashNowMode)));
-                } catch (Exception ignore) {
-                }
-
-
+                return true;
             }
         });
     }
@@ -246,14 +223,24 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && data != null) {
-            if (requestCode == 100) {
-                Uri uri = data.getData();
-                binding.picView.setImageURI(uri);
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == Const.CAMERA_PERMISSION_REQUEST) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                bindCameraListeners();
             }
         }
-
     }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+////        if (resultCode == RESULT_OK && data != null) {
+////            if (requestCode == 100) {
+////                Uri uri = data.getData();
+////                binding.picView.setImageURI(uri);
+////            }
+////        }
+//    }
 }
