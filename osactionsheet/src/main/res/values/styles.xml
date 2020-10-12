@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" >
+
+    <style name="OSActionSheetDefaultTheme" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="cornerRoundRadius">16dp</item>
+        <item name="bgColor">@android:color/white</item>
+        <item name="titleTextSize">24sp</item>
+        <item name="titleTextColor">#666</item>
+        <item name="itemTextSize">18sp</item>
+        <item name="itemTextColor">#666</item>
+        <item name="itemPrefHeight">48dp</item>
+    </style>
+
+</resources>

@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.view.View;
 import android.view.Window;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.ImageProxy;
@@ -13,6 +14,17 @@ import androidx.camera.core.ImageProxy;
 import java.nio.ByteBuffer;
 
 public class Utils {
+    public static int getStatusBarHeight(@NonNull Activity activity) {
+        int result = 0;
+        //获取状态栏高度的资源id
+        int resourceId = activity.getResources().getIdentifier(
+                "status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = activity.getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
     public static void setFullScreen(Window win, boolean full) {
         if (full) {
             win.getDecorView().setSystemUiVisibility(

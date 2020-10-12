@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="OSActionSheet">
+        <attr name="cornerRoundRadius" format="dimension|reference"/>
+        <attr name="bgColor" format="color|reference"/>
+        <attr name="lightNavBarMode" format="boolean"/>
+        <attr name="titleTextSize" format="dimension|reference"/>
+        <attr name="itemTextSize" format="dimension|reference"/>
+        <attr name="titleTextColor" format="color|reference"/>
+        <attr name="itemTextColor" format="color|reference"/>
+        <attr name="itemPrefHeight" format="dimension|reference"/>
+        <attr name="OSActionSheetTheme" format="reference"/>
+    </declare-styleable>
+</resources>

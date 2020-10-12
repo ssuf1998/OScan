@@ -1,3 +1,4 @@
+include ':osactionsheet'
 include ':app'
 rootProject.name = "OScan"
 include ':opencv'

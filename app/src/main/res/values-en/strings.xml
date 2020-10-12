@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OScan</string>
+    <string name="bottom_nav_home">Home</string>
+    <string name="bottom_nav_more">More</string>
+    <string name="bottom_nav_scan">Scan</string>
+    <string name="scan_action_sheet_doc">Document</string>
+    <string name="scan_action_sheet_card">Card</string>
+    <string name="scan_action_sheet_code">Bar Code</string>
+    <string name="scan_action_sheet_title">WHAT TO BE SCANNED?</string>
+    <string name="take_pic_btn_desc">Capture</string>
+    <string name="pick_pic_btn_desc">Pick a pic from gallary</string>
+</resources>

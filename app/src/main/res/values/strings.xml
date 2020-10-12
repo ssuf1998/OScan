@@ -1,5 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OScan</string>
-    <string name="pick_img_btn">选取图片</string>
-    <string name="apply_btn">应用效果</string>
+    <string name="bottom_nav_home">主页</string>
+    <string name="bottom_nav_more">更多</string>
+    <string name="bottom_nav_scan">扫描</string>
+    <string name="scan_action_sheet_doc">文档</string>
+    <string name="scan_action_sheet_card">卡片</string>
+    <string name="scan_action_sheet_code">条码</string>
+    <string name="scan_action_sheet_title">扫描类型</string>
+    <string name="take_pic_btn_desc">捕获</string>
+    <string name="pick_pic_btn_desc">从相册选取照片</string>
 </resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/OSASView"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rounded_action_sheet_bg"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/OSASTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="12dp"
+        android:height="?itemPrefHeight"
+        android:gravity="center"
+        android:text="OSASTitle"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="?titleTextColor"
+        android:textSize="?titleTextSize"
+        android:textStyle="bold">
+
+    </TextView>
+
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/OSASItemsView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
+</LinearLayout>

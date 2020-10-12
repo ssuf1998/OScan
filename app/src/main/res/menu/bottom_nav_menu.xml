@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottomNavHome"
+        android:icon="@drawable/ic_fluent_home_24_selector"
+        android:title="@string/bottom_nav_home">
+
+    </item>
+
+    <item
+        android:id="@+id/bottomNavScan"
+        android:icon="@drawable/ic_fluent_add_square_24_selector"
+        android:title="@string/bottom_nav_scan">
+
+    </item>
+
+    <item
+        android:id="@+id/bottomNavMore"
+        android:icon="@drawable/ic_fluent_more_24_selector"
+        android:title="@string/bottom_nav_more">
+
+    </item>
+
+</menu>
