@@ -48,10 +48,12 @@
             android:layout_marginTop="8dp"
             android:background="@android:color/black"
             android:contentDescription="@string/pick_pic_btn_desc"
+            android:foreground="@drawable/white_ripple"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_fluent_image_24_pressed_selector"
+            android:src="@drawable/ic_fluent_image_24_regular"
             android:tint="@android:color/white"
             app:layout_constraintEnd_toStartOf="@+id/takePicBtn"
+            app:layout_constraintHorizontal_bias="0.7"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -60,18 +62,17 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginTop="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:contentDescription="@string/pick_pic_btn_desc"
-            android:scaleType="fitCenter"
             android:background="@android:color/black"
-            android:src="@drawable/ic_fluent_flash_auto_24_pressed_selector"
+            android:contentDescription="@string/pick_pic_btn_desc"
+            android:foreground="@drawable/white_ripple"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fluent_flash_auto_24_regular"
             android:tint="@android:color/white"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.3"
             app:layout_constraintStart_toEndOf="@+id/takePicBtn"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

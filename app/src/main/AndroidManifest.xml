@@ -17,18 +17,22 @@
             android:name=".MainActivity"
             android:screenOrientation="portrait"
             android:theme="@style/MainActivity">
-
-
-        </activity>
-
-        <activity
-            android:name=".ScanActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/ScanActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+        </activity>
+        <activity
+            android:name=".ScanActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ScanActivity">
+
+        </activity>
+        <activity
+            android:name=".ProcessActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ScanActivity">
 
         </activity>
     </application>

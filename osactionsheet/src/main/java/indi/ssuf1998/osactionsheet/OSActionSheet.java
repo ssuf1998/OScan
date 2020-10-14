@@ -1,56 +1,63 @@
 package indi.ssuf1998.osactionsheet;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
-import java.util.List;
+import indi.ssuf1998.osactionsheet.databinding.ActionSheetBaseLayoutBinding;
 
-import indi.ssuf1998.osactionsheet.databinding.ActionSheetLayoutBinding;
 
 public class OSActionSheet extends BottomSheetDialogFragment {
-    private ActionSheetLayoutBinding binding;
-
+    private ActionSheetBaseLayoutBinding binding;
     private String OSASTitle;
-    private List<OSASItem> items;
-    private boolean lightNavBarMode;
-    private OnItemClickListener mOnItemClickListener;
-
+    private String OSASSubTitle;
+    private boolean immersiveModeXML;
+    private boolean immersiveMode = true;
     private int originPaddingBottom;
+    private boolean showing = false;
 
-    public OSActionSheet(String OSASTitle, List<OSASItem> items) {
-        this.items = items;
+    public OSActionSheet(String OSASTitle, String OSASSubTitle) {
         this.OSASTitle = OSASTitle.toUpperCase();
+        this.OSASSubTitle = OSASSubTitle;
     }
 
-    public OSActionSheet(List<OSASItem> items) {
-        this("OSASTitle", items);
+    public OSActionSheet(String OSASTitle) {
+        this(OSASTitle, "");
     }
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        showing = true;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        showing = false;
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        binding = ActionSheetLayoutBinding.inflate(inflater);
+        binding = ActionSheetBaseLayoutBinding.inflate(inflater, container, false);
         initUI();
-        initListeners();
 
         return binding.getRoot();
     }
@@ -62,7 +69,7 @@ public class OSActionSheet extends BottomSheetDialogFragment {
             Dialog dialog = getDialog();
             Window win = dialog.getWindow();
 
-            if (lightNavBarMode &&
+            if (immersiveMode && immersiveModeXML &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                 if (originPaddingBottom == binding.OSASView.getPaddingBottom()) {
                     binding.OSASView.setPadding(
@@ -72,6 +79,11 @@ public class OSActionSheet extends BottomSheetDialogFragment {
                             getNavBarHeightInPixel() + binding.OSASView.getPaddingBottom());
 
                     win.findViewById(com.google.android.material.R.id.container).setFitsSystemWindows(false);
+
+                    win.getDecorView().setSystemUiVisibility(
+                            win.getDecorView().getWindowSystemUiVisibility() |
+                                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    );
                 }
             } else {
                 if (originPaddingBottom != binding.OSASView.getPaddingBottom()) {
@@ -83,7 +95,6 @@ public class OSActionSheet extends BottomSheetDialogFragment {
 
                     win.findViewById(com.google.android.material.R.id.container).setFitsSystemWindows(true);
                 }
-
             }
         }
     }
@@ -91,18 +102,23 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        applyStyle();
+    }
 
+    private void applyStyle() {
         assert getContext() != null;
+
         TypedArray attrArray = getContext().obtainStyledAttributes(
                 null,
-                R.styleable.OSActionSheet);
-
-        int themeId = attrArray.getResourceId(R.styleable.OSActionSheet_OSActionSheetTheme,
-                R.style.OSActionSheetDefaultTheme);
-        lightNavBarMode = attrArray.getBoolean(R.styleable.OSActionSheet_lightNavBarMode,
-                false);
-
+                R.styleable.OSAS);
+        int themeId = attrArray.getResourceId(R.styleable.OSASStyle_OSASTheme,
+                R.style.OSASDefaultTheme);
         attrArray.recycle();
+
+        TypedArray styleArray =
+                getContext().getTheme().obtainStyledAttributes(themeId, R.styleable.OSAS);
+        immersiveModeXML = styleArray.getBoolean(R.styleable.OSAS_immersiveMode, true);
+        styleArray.recycle();
 
         setStyle(STYLE_NORMAL, themeId);
     }
@@ -114,38 +130,20 @@ public class OSActionSheet extends BottomSheetDialogFragment {
         dialog.setOnShowListener(dialogInterface -> {
             View designView = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
             designView.setBackgroundColor(Color.TRANSPARENT);
+
         });
         return dialog;
     }
 
     private void initUI() {
-        OSASAdapter adapter = new OSASAdapter(items);
-        LinearLayoutManager layoutMgr = new LinearLayoutManager(getContext());
-
-        if (mOnItemClickListener != null) {
-            adapter.setOnItemClickListener(view -> {
-                int idx = binding.OSASItemsView.getChildAdapterPosition(view);
-                mOnItemClickListener.onItemClick(idx);
-                OSActionSheet.this.dismiss();
-            });
+        binding.OSASTitle.setText(OSASTitle);
+        if (OSASSubTitle.isEmpty()) {
+            binding.OSASSubTitle.setVisibility(View.GONE);
+        } else {
+            binding.OSASSubTitle.setText(OSASSubTitle);
         }
 
-        binding.OSASItemsView.setLayoutManager(layoutMgr);
-        binding.OSASItemsView.setAdapter(adapter);
-
-        binding.OSASTitle.setText(OSASTitle);
-
         originPaddingBottom = binding.OSASView.getPaddingBottom();
-
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private void initListeners() {
-        binding.OSASItemsView.setOnTouchListener((view, motionEvent) -> {
-            boolean notOnTop = binding.OSASItemsView.canScrollVertically(-1);
-            binding.OSASItemsView.requestDisallowInterceptTouchEvent(notOnTop);
-            return false;
-        });
     }
 
     private int getNavBarHeightInPixel() {
@@ -173,23 +171,32 @@ public class OSActionSheet extends BottomSheetDialogFragment {
         binding.OSASTitle.setText(OSASTitle);
     }
 
-    public List<OSASItem> getItems() {
-        return items;
+    public String getOSASSubTitle() {
+        return OSASSubTitle;
     }
 
-    public boolean isLightNavBarMode() {
-        return lightNavBarMode;
+    public void setOSASSubTitle(String OSASSubTitle) {
+        this.OSASSubTitle = OSASSubTitle;
+        binding.OSASTitle.setText(OSASSubTitle);
     }
 
-    public void setLightNavBarMode(boolean lightNavBarMode) {
-        this.lightNavBarMode = lightNavBarMode;
+    public boolean isImmersiveMode() {
+        return immersiveMode;
     }
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
-        this.mOnItemClickListener = listener;
+    public void setImmersiveMode(boolean immersiveMode) {
+        this.immersiveMode = immersiveMode;
     }
 
-    public interface OnItemClickListener {
-        void onItemClick(int idx);
+    public void setViewIntoSlot(View newView) {
+        binding.slotView.addView(newView);
+    }
+
+    public View getSlotView() {
+        return binding.slotView;
+    }
+
+    public boolean isShowing() {
+        return showing;
     }
 }

@@ -1,14 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <declare-styleable name="OSActionSheet">
-        <attr name="cornerRoundRadius" format="dimension|reference"/>
-        <attr name="bgColor" format="color|reference"/>
-        <attr name="lightNavBarMode" format="boolean"/>
-        <attr name="titleTextSize" format="dimension|reference"/>
-        <attr name="itemTextSize" format="dimension|reference"/>
-        <attr name="titleTextColor" format="color|reference"/>
-        <attr name="itemTextColor" format="color|reference"/>
-        <attr name="itemPrefHeight" format="dimension|reference"/>
-        <attr name="OSActionSheetTheme" format="reference"/>
+    <declare-styleable name="OSAS">
+        <attr name="cornerRoundRadius" format="dimension|reference" />
+        <attr name="bgColor" format="color|reference" />
+        <attr name="titleTextSize" format="dimension|reference" />
+        <attr name="titleTextColor" format="color|reference" />
+        <attr name="subTitleTextSize" format="dimension|reference" />
+        <attr name="subTitleTextColor" format="color|reference" />
+
+        <attr name="itemPrefHeight" format="dimension|reference" />
+        <attr name="itemTextSize" format="dimension|reference" />
+        <attr name="itemTextColor" format="color|reference" />
+
+        <attr name="confirmBtnColor" format="color|reference"/>
+        <attr name="cancelBtnColor" format="color|reference"/>
+        <attr name="confirmBtnTextColor" format="color|reference"/>
+        <attr name="cancelBtnTextColor" format="color|reference"/>
+        <attr name="dialogBtnWidthPercent" format="float|reference"/>
+        <attr name="dialogBtnDimenRatio" format="string|reference"/>
+        <attr name="dialogBtnTextSize" format="dimension|reference"/>
+
+        <attr name="immersiveMode" format="boolean"/>
+    </declare-styleable>
+    <declare-styleable name="OSASStyle">
+        <attr name="OSASTheme" format="reference" />
     </declare-styleable>
 </resources>

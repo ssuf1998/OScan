@@ -47,6 +47,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'com.microsoft.design:fluent-system-icons:1.1.65'
     implementation project(path: ':osactionsheet')
+    implementation 'com.github.GrenderG:Toasty:1.5.0'
 }
 repositories {
     mavenCentral()

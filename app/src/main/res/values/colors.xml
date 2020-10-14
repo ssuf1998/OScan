@@ -5,7 +5,5 @@
     <color name="colorAccent">#FFFFFF</color>
     <color name="colorBackground">#EEE</color>
     <color name="colorBackground2">#F2F2F2</color>
-    <color name="colorGradient1">#00c6fb</color>
-    <color name="colorGradient2">#005bea</color>
-    <color name="colorText">#666666</color>
+    <color name="colorText">#666</color>
 </resources>

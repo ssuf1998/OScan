@@ -1,15 +1,26 @@
 package indi.ssuf1998.oscan;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.OrientationEventListener;
 import android.view.Surface;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
@@ -24,6 +35,12 @@ import androidx.core.content.ContextCompat;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+
+import es.dmoral.toasty.Toasty;
+import indi.ssuf1998.osactionsheet.OSMASItem;
+import indi.ssuf1998.osactionsheet.OSMenuActionSheet;
 import indi.ssuf1998.oscan.databinding.ScanActivityLayoutBinding;
 
 public class ScanActivity extends AppCompatActivity {
@@ -35,13 +52,17 @@ public class ScanActivity extends AppCompatActivity {
     private Preview preview;
     private Camera camera;
 
+    private Bitmap acquiredBmp;
+    private OSMenuActionSheet grantedMenuAS;
+    private int tryTimes = 0;
+
     private final SparseIntArray flashModes = new SparseIntArray() {{
         append(ImageCapture.FLASH_MODE_AUTO,
-                R.drawable.ic_fluent_flash_auto_24_pressed_selector);
+                R.drawable.ic_fluent_flash_auto_24_selector);
         append(ImageCapture.FLASH_MODE_ON,
-                R.drawable.ic_fluent_flash_on_24_pressed_selector);
+                R.drawable.ic_fluent_flash_on_24_selector);
         append(ImageCapture.FLASH_MODE_OFF,
-                R.drawable.ic_fluent_flash_off_24_pressed_selector);
+                R.drawable.ic_fluent_flash_off_24_selector);
     }};
     int flashNowMode = ImageCapture.FLASH_MODE_AUTO;
 
@@ -51,33 +72,60 @@ public class ScanActivity extends AppCompatActivity {
 
         binding = ScanActivityLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
         usesPermissions();
 
         binding.getRoot().post(() -> {
             initUI();
             bindListeners();
         });
-
     }
 
     private void initUI() {
         binding.takePicBtn.setTranslationY(-binding.takePicBtn.getHeight() * (1 / 3f));
 
+        ArrayList<OSMASItem> items = new ArrayList<OSMASItem>() {{
+            add(new OSMASItem()
+                    .setItemText(getString(R.string.granted_action_sheet_auth))
+                    .setItemTextColor(ScanActivity.this.getColor(R.color.colorPrimary))
+                    .setTypefaceStyle(Typeface.BOLD)
+            );
+            add(new OSMASItem(getString(R.string.pick_pic_btn_desc)));
+            add(new OSMASItem(getString(R.string.action_sheet_cancel)));
+        }};
+
+        grantedMenuAS = new OSMenuActionSheet(getString(R.string.granted_action_sheet_title), items);
+        grantedMenuAS.setCancelable(false);
+        grantedMenuAS.setDecoration(new RecycleViewDivider(this));
     }
 
     private void bindListeners() {
-
+        grantedMenuAS.setOnItemClickListener(idx -> {
+            if (idx == 0) {
+                usesPermissions();
+            } else if (idx == 1) {
+                pickPic();
+            } else if (idx == 2) {
+                finish();
+            }
+        });
     }
 
     private void usesPermissions() {
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    Const.CAMERA_PERMISSION_REQUEST);
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.CAMERA},
+                Const.CAMERA_PERMISSION_REQUEST);
+        if (tryTimes <= 3) {
+            tryTimes++;
         }
     }
 
+    private void pickPic() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_pic_intent_title)),
+                Const.PICK_IMG_REQUEST);
+    }
 
     private void bindCameraListeners() {
 
@@ -101,13 +149,15 @@ public class ScanActivity extends AppCompatActivity {
             }
         });
 
+        binding.pickPicBtn.setOnClickListener(view -> pickPic());
+
         binding.takePicBtn.setOnClickListener(view -> {
             capture.takePicture(
                     ContextCompat.getMainExecutor(ScanActivity.this),
                     new ImageCapture.OnImageCapturedCallback() {
                         @Override
                         public void onCaptureSuccess(@NonNull ImageProxy image) {
-                            Bitmap bmp = Utils.imgProxy2Bitmap(image);
+                            acquiredBmp = Utils.imgProxy2Bitmap(image);
                             image.close();
                         }
 
@@ -156,28 +206,54 @@ public class ScanActivity extends AppCompatActivity {
 
         preview.setSurfaceProvider(binding.previewView.getSurfaceProvider());
         camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
-
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == Const.CAMERA_PERMISSION_REQUEST) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantedMenuAS.isShowing()) {
+                    grantedMenuAS.dismiss();
+                }
                 bindCameraListeners();
+            } else {
+                DisplayMetrics metrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+                if (tryTimes > 1) {
+                    Toast grantToast = Toasty.error(
+                            this,
+                            this.getString(R.string.granted_fail_toast),
+                            Toast.LENGTH_SHORT
+                    );
+                    if (tryTimes > 3) {
+                        ((TextView) grantToast.getView().findViewById(es.dmoral.toasty.R.id.toast_text)).setText(
+                                this.getString(R.string.granted_multi_fail_toast));
+                    }
+                    grantToast.setGravity(Gravity.CENTER, 0, -metrics.heightPixels / 4);
+                    grantToast.show();
+                }
+
+                if (!grantedMenuAS.isShowing()) {
+                    grantedMenuAS.show(getSupportFragmentManager(), "grantedMenuAS");
+                }
             }
         }
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-////        if (resultCode == RESULT_OK && data != null) {
-////            if (requestCode == 100) {
-////                Uri uri = data.getData();
-////                binding.picView.setImageURI(uri);
-////            }
-////        }
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && data != null) {
+            if (requestCode == Const.PICK_IMG_REQUEST) {
+                Uri uri = data.getData();
+                try {
+                    assert uri != null;
+                    acquiredBmp = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uri));
+                } catch (FileNotFoundException ignore) {
+                }
+            }
+        }
+    }
 }

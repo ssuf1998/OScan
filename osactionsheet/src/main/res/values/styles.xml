@@ -1,14 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools" >
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="OSActionSheetDefaultTheme" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+    <style name="OSASDefaultTheme" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="immersiveMode">true</item>
+
         <item name="cornerRoundRadius">16dp</item>
         <item name="bgColor">@android:color/white</item>
-        <item name="titleTextSize">24sp</item>
+        <item name="titleTextSize">22sp</item>
         <item name="titleTextColor">#666</item>
+        <item name="subTitleTextSize">16sp</item>
+        <item name="subTitleTextColor">#aaa</item>
+
         <item name="itemTextSize">18sp</item>
         <item name="itemTextColor">#666</item>
-        <item name="itemPrefHeight">48dp</item>
+        <item name="itemPrefHeight">56dp</item>
+
+        <item name="confirmBtnColor">?attr/colorPrimary</item>
+        <item name="cancelBtnColor">#ddd</item>
+        <item name="confirmBtnTextColor">#fff</item>
+        <item name="cancelBtnTextColor">#666</item>
+        <item name="dialogBtnDimenRatio">2:1</item>
+        <item name="dialogBtnWidthPercent">0.25</item>
+        <item name="dialogBtnTextSize">18sp</item>
     </style>
 
 </resources>
