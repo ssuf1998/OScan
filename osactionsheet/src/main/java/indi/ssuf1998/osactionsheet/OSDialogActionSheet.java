@@ -44,14 +44,19 @@ public class OSDialogActionSheet extends OSActionSheet {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View fatherView = super.onCreateView(inflater, container, savedInstanceState);
+        final View fatherView = super.onCreateView(inflater, container, savedInstanceState);
         assert fatherView != null;
-        LinearLayout slotView = (LinearLayout) fatherView.findViewById(R.id.slotView);
+        final LinearLayout slotView = (LinearLayout) fatherView.findViewById(R.id.slotView);
         binding = DialogActionSheetLayoutBinding.inflate(inflater, slotView, true);
 
+        return fatherView;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         initUI();
         initListeners();
-        return fatherView;
     }
 
     private void initUI() {
@@ -88,11 +93,6 @@ public class OSDialogActionSheet extends OSActionSheet {
 
     public void setDialogMode(int dialogMode) {
         this.dialogMode = dialogMode;
-        if (dialogMode == Const.DIALOG_CONFIRM_MODE) {
-            binding.cancelBtn.setVisibility(View.GONE);
-        } else if (dialogMode == Const.DIALOG_CONFIRM_CANCEL_MODE) {
-            binding.cancelBtn.setVisibility(View.VISIBLE);
-        }
     }
 
     public String getConfirmBtnText() {
@@ -101,9 +101,6 @@ public class OSDialogActionSheet extends OSActionSheet {
 
     public void setConfirmBtnText(String confirmBtnText) {
         this.confirmBtnText = confirmBtnText;
-        if (!confirmBtnText.isEmpty()) {
-            binding.confirmBtn.setText(confirmBtnText);
-        }
     }
 
     public String getCancelBtnText() {
@@ -112,9 +109,6 @@ public class OSDialogActionSheet extends OSActionSheet {
 
     public void setCancelBtnText(String cancelBtnText) {
         this.cancelBtnText = cancelBtnText;
-        if (!cancelBtnText.isEmpty()) {
-            binding.confirmBtn.setText(cancelBtnText);
-        }
     }
 
     public void setOnClickListener(OnClickListener listener) {

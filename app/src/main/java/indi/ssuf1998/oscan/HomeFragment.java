@@ -39,7 +39,9 @@ public class HomeFragment extends Fragment {
         binding.docRecyclerView.setAdapter(adapter);
     }
 
-    public void scrollToTop(){
-        binding.docRecyclerView.smoothScrollToPosition(0);
+    public void scrollToTop() {
+        if (binding.docRecyclerView != null) {
+            binding.docRecyclerView.smoothScrollToPosition(0);
+        }
     }
 }

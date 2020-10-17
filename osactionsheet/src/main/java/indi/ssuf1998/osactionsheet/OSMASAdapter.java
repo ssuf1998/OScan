@@ -12,8 +12,8 @@ import java.util.List;
 
 import indi.ssuf1998.osactionsheet.databinding.MenuActionSheetItemLayoutBinding;
 
-public class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
-    private List<OSMASItem> items;
+class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
+    private final List<OSMASItem> items;
     private OnItemClickListener mOnItemClickListener;
 
     public OSMASAdapter(List<OSMASItem> items) {
@@ -23,11 +23,11 @@ public class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
     @NonNull
     @Override
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-        MenuActionSheetItemLayoutBinding binding = MenuActionSheetItemLayoutBinding.inflate(
+        final LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        final MenuActionSheetItemLayoutBinding binding = MenuActionSheetItemLayoutBinding.inflate(
                 inflater, parent, false);
 
-        VH vh = new VH(binding);
+        final VH vh = new VH(binding);
 
         if (mOnItemClickListener != null) {
             vh.itemView.setOnClickListener(view -> mOnItemClickListener.onItemClick(view));
@@ -66,7 +66,7 @@ public class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
     }
 
     public static class VH extends RecyclerView.ViewHolder {
-        private MenuActionSheetItemLayoutBinding binding;
+        private final MenuActionSheetItemLayoutBinding binding;
 
         public MenuActionSheetItemLayoutBinding getBinding() {
             return binding;

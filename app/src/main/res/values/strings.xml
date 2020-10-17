@@ -18,4 +18,5 @@
     <string name="action_sheet_cancel">取消</string>
     <string name="granted_fail_toast">授权失败！</string>
     <string name="granted_multi_fail_toast">多次尝试授权均失败，请尝试在设置中授权。</string>
+    <string name="err_file_not_find">找不到指定文件。</string>
 </resources>

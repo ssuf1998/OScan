@@ -11,7 +11,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
     }
 
     buildTypes {
@@ -21,13 +23,19 @@ android {
         }
     }
 
-    buildFeatures{
+    buildFeatures {
         viewBinding true
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ["libs"];
+        }
     }
 }
 
@@ -48,6 +56,8 @@ dependencies {
     implementation 'com.microsoft.design:fluent-system-icons:1.1.65'
     implementation project(path: ':osactionsheet')
     implementation 'com.github.GrenderG:Toasty:1.5.0'
+
+    implementation 'org.tensorflow:tensorflow-lite:2.3.0'
 }
 repositories {
     mavenCentral()

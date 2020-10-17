@@ -27,7 +27,6 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     private String OSASSubTitle;
     private boolean immersiveModeXML;
     private boolean immersiveMode = true;
-    private int originPaddingBottom;
     private boolean showing = false;
 
     public OSActionSheet(String OSASTitle, String OSASSubTitle) {
@@ -57,7 +56,6 @@ public class OSActionSheet extends BottomSheetDialogFragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = ActionSheetBaseLayoutBinding.inflate(inflater, container, false);
-        initUI();
 
         return binding.getRoot();
     }
@@ -65,36 +63,33 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     @Override
     public void onStart() {
         super.onStart();
+        initUI();
+        solveImmersive();
+    }
+
+    private void solveImmersive() {
         if (getDialog() != null && getDialog().getWindow() != null) {
-            Dialog dialog = getDialog();
-            Window win = dialog.getWindow();
+            final Dialog dialog = getDialog();
+            final Window win = dialog.getWindow();
 
             if (immersiveMode && immersiveModeXML &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                if (originPaddingBottom == binding.OSASView.getPaddingBottom()) {
-                    binding.OSASView.setPadding(
-                            binding.OSASView.getPaddingLeft(),
-                            binding.OSASView.getPaddingTop(),
-                            binding.OSASView.getPaddingRight(),
-                            getNavBarHeightInPixel() + binding.OSASView.getPaddingBottom());
 
-                    win.findViewById(com.google.android.material.R.id.container).setFitsSystemWindows(false);
+                binding.OSASView.setPadding(
+                        binding.OSASView.getPaddingLeft(),
+                        binding.OSASView.getPaddingTop(),
+                        binding.OSASView.getPaddingRight(),
+                        getNavBarHeightInPixel() + binding.OSASView.getPaddingBottom());
 
-                    win.getDecorView().setSystemUiVisibility(
-                            win.getDecorView().getWindowSystemUiVisibility() |
-                                    View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                    );
-                }
+                win.findViewById(R.id.container).setFitsSystemWindows(false);
+
+                win.getDecorView().setSystemUiVisibility(
+                        win.getDecorView().getWindowSystemUiVisibility() |
+                                View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                );
+
             } else {
-                if (originPaddingBottom != binding.OSASView.getPaddingBottom()) {
-                    binding.OSASView.setPadding(
-                            binding.OSASView.getPaddingLeft(),
-                            binding.OSASView.getPaddingTop(),
-                            binding.OSASView.getPaddingRight(),
-                            originPaddingBottom);
-
-                    win.findViewById(com.google.android.material.R.id.container).setFitsSystemWindows(true);
-                }
+                win.findViewById(R.id.container).setFitsSystemWindows(true);
             }
         }
     }
@@ -108,14 +103,14 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     private void applyStyle() {
         assert getContext() != null;
 
-        TypedArray attrArray = getContext().obtainStyledAttributes(
+        final TypedArray attrArray = getContext().obtainStyledAttributes(
                 null,
                 R.styleable.OSAS);
-        int themeId = attrArray.getResourceId(R.styleable.OSASStyle_OSASTheme,
+        final int themeId = attrArray.getResourceId(R.styleable.OSASStyle_OSASTheme,
                 R.style.OSASDefaultTheme);
         attrArray.recycle();
 
-        TypedArray styleArray =
+        final TypedArray styleArray =
                 getContext().getTheme().obtainStyledAttributes(themeId, R.styleable.OSAS);
         immersiveModeXML = styleArray.getBoolean(R.styleable.OSAS_immersiveMode, true);
         styleArray.recycle();
@@ -126,9 +121,9 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        Dialog dialog = super.onCreateDialog(savedInstanceState);
+        final Dialog dialog = super.onCreateDialog(savedInstanceState);
         dialog.setOnShowListener(dialogInterface -> {
-            View designView = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            View designView = dialog.findViewById(R.id.design_bottom_sheet);
             designView.setBackgroundColor(Color.TRANSPARENT);
 
         });
@@ -142,14 +137,12 @@ public class OSActionSheet extends BottomSheetDialogFragment {
         } else {
             binding.OSASSubTitle.setText(OSASSubTitle);
         }
-
-        originPaddingBottom = binding.OSASView.getPaddingBottom();
     }
 
     private int getNavBarHeightInPixel() {
         if (getContext() != null) {
-            Resources res = getContext().getResources();
-            int resId = res.getIdentifier(
+            final Resources res = getContext().getResources();
+            final int resId = res.getIdentifier(
                     "navigation_bar_height",
                     "dimen",
                     "android");

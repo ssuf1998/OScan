@@ -18,7 +18,7 @@ public class RecycleViewDivider extends RecyclerView.ItemDecoration {
     private Paint mPaint;
     private Drawable mDivider;
     private int mDividerHeight = 1;
-    private int mOrientation;
+    private final int mOrientation;
     private static final int[] ATTRS = new int[]{android.R.attr.listDivider};
 
     public RecycleViewDivider(Context context, int orientation) {

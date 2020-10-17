@@ -19,7 +19,7 @@ import indi.ssuf1998.osactionsheet.databinding.MenuActionSheetLayoutBinding;
 public class OSMenuActionSheet extends OSActionSheet {
     private MenuActionSheetLayoutBinding binding;
 
-    private List<OSMASItem> items;
+    private final List<OSMASItem> items;
     private OnItemClickListener mOnItemClickListener;
     private RecyclerView.ItemDecoration decoration;
 
@@ -32,31 +32,38 @@ public class OSMenuActionSheet extends OSActionSheet {
         this(OSASTitle, "", items);
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        initUI();
+        initListeners();
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        View fatherView = super.onCreateView(inflater, container, savedInstanceState);
+        final View fatherView = super.onCreateView(inflater, container, savedInstanceState);
         assert fatherView != null;
-        LinearLayout slotView = (LinearLayout) fatherView.findViewById(R.id.slotView);
+        final LinearLayout slotView = (LinearLayout) fatherView.findViewById(R.id.slotView);
         binding = MenuActionSheetLayoutBinding.inflate(inflater, slotView, true);
 
-        initUI();
-        initListeners();
         return fatherView;
     }
 
     private void initUI() {
-        OSMASAdapter adapter = new OSMASAdapter(items);
-        LinearLayoutManager layoutMgr = new LinearLayoutManager(getContext());
-        binding.OSMASItemsView.addItemDecoration(decoration);
+        final OSMASAdapter adapter = new OSMASAdapter(items);
+        final LinearLayoutManager layoutMgr = new LinearLayoutManager(getContext());
+        if (decoration != null) {
+            binding.OSMASItemsView.addItemDecoration(decoration);
+        }
         binding.OSMASItemsView.setLayoutManager(layoutMgr);
         binding.OSMASItemsView.setAdapter(adapter);
 
         if (mOnItemClickListener != null) {
             adapter.setOnItemClickListener(view -> {
-                int idx = binding.OSMASItemsView.getChildAdapterPosition(view);
+                final int idx = binding.OSMASItemsView.getChildAdapterPosition(view);
                 mOnItemClickListener.onItemClick(idx);
             });
         }
@@ -65,7 +72,7 @@ public class OSMenuActionSheet extends OSActionSheet {
     @SuppressLint("ClickableViewAccessibility")
     private void initListeners() {
         binding.OSMASItemsView.setOnTouchListener((view, motionEvent) -> {
-            boolean notOnTop = binding.OSMASItemsView.canScrollVertically(-1);
+            final boolean notOnTop = binding.OSMASItemsView.canScrollVertically(-1);
             binding.OSMASItemsView.requestDisallowInterceptTouchEvent(notOnTop);
             return false;
         });

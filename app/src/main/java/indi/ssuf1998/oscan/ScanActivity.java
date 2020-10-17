@@ -5,18 +5,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.SparseIntArray;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.OrientationEventListener;
 import android.view.Surface;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,7 +21,6 @@ import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
@@ -46,12 +40,14 @@ import indi.ssuf1998.oscan.databinding.ScanActivityLayoutBinding;
 public class ScanActivity extends AppCompatActivity {
 
     private ScanActivityLayoutBinding binding;
+
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private CameraSelector cameraSelector;
     private ImageCapture capture;
     private Preview preview;
     private Camera camera;
 
+    private final SharedBlock block = SharedBlock.getInstance();
     private Bitmap acquiredBmp;
     private OSMenuActionSheet grantedMenuAS;
     private int tryTimes = 0;
@@ -82,16 +78,19 @@ public class ScanActivity extends AppCompatActivity {
 
     private void initUI() {
         binding.takePicBtn.setTranslationY(-binding.takePicBtn.getHeight() * (1 / 3f));
+        binding.pickPicBtn.setTranslationY(binding.takePicBtn.getHeight() / 2f +
+                binding.takePicBtn.getTranslationY());
+        binding.switchFlashBtn.setTranslationY(binding.takePicBtn.getHeight() / 2f +
+                binding.takePicBtn.getTranslationY());
 
-        ArrayList<OSMASItem> items = new ArrayList<OSMASItem>() {{
-            add(new OSMASItem()
-                    .setItemText(getString(R.string.granted_action_sheet_auth))
-                    .setItemTextColor(ScanActivity.this.getColor(R.color.colorPrimary))
-                    .setTypefaceStyle(Typeface.BOLD)
-            );
-            add(new OSMASItem(getString(R.string.pick_pic_btn_desc)));
-            add(new OSMASItem(getString(R.string.action_sheet_cancel)));
-        }};
+        final ArrayList<OSMASItem> items = new ArrayList<>();
+        items.add(new OSMASItem()
+                .setItemText(getString(R.string.granted_action_sheet_auth))
+                .setItemTextColor(ScanActivity.this.getColor(R.color.colorPrimary))
+                .setTypefaceStyle(Typeface.BOLD)
+        );
+        items.add(new OSMASItem(getString(R.string.pick_pic_btn_desc)));
+        items.add(new OSMASItem(getString(R.string.action_sheet_cancel)));
 
         grantedMenuAS = new OSMenuActionSheet(getString(R.string.granted_action_sheet_title), items);
         grantedMenuAS.setCancelable(false);
@@ -120,21 +119,29 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     private void pickPic() {
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, getString(R.string.pick_pic_intent_title)),
                 Const.PICK_IMG_REQUEST);
     }
 
-    private void bindCameraListeners() {
+    private void giveBmp2Process(Bitmap bmp) {
+        final Intent intent = new Intent(this, ProcessActivity.class);
+        block.putData("bmp", bmp);
+        this.startActivity(intent);
+    }
 
+    private void bindCameraListeners() {
         // 摄像头绑定监听
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
                 bindToCamera(cameraProviderFuture.get());
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                Toasty.error(ScanActivity.this,
+                        e.toString(),
+                        Toast.LENGTH_LONG).show();
             }
         }, ContextCompat.getMainExecutor(this));
 
@@ -145,7 +152,10 @@ public class ScanActivity extends AppCompatActivity {
                 binding.switchFlashBtn.setImageDrawable(ContextCompat.getDrawable(
                         ScanActivity.this,
                         flashModes.get(flashNowMode)));
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                Toasty.error(ScanActivity.this,
+                        e.toString(),
+                        Toast.LENGTH_LONG).show();
             }
         });
 
@@ -157,14 +167,8 @@ public class ScanActivity extends AppCompatActivity {
                     new ImageCapture.OnImageCapturedCallback() {
                         @Override
                         public void onCaptureSuccess(@NonNull ImageProxy image) {
-                            acquiredBmp = Utils.imgProxy2Bitmap(image);
+                            giveBmp2Process(Utils.imgProxy2Bitmap(image));
                             image.close();
-                        }
-
-                        @Override
-                        public void onError(@NonNull ImageCaptureException exception) {
-                            super.onError(exception);
-                            Log.e("take pic error", String.valueOf(exception.getImageCaptureError()));
                         }
                     }
             );
@@ -179,10 +183,10 @@ public class ScanActivity extends AppCompatActivity {
         capture = new ImageCapture.Builder()
                 .build();
 
-        OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
+        final OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int orientation) {
-                int rotation;
+                final int rotation;
 
                 if (orientation >= 45 && orientation < 135) {
                     rotation = Surface.ROTATION_270;
@@ -218,20 +222,18 @@ public class ScanActivity extends AppCompatActivity {
                 }
                 bindCameraListeners();
             } else {
-                DisplayMetrics metrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
                 if (tryTimes > 1) {
-                    Toast grantToast = Toasty.error(
+                    final Toast grantToast = Toasty.error(
                             this,
                             this.getString(R.string.granted_fail_toast),
                             Toast.LENGTH_SHORT
                     );
+
                     if (tryTimes > 3) {
-                        ((TextView) grantToast.getView().findViewById(es.dmoral.toasty.R.id.toast_text)).setText(
-                                this.getString(R.string.granted_multi_fail_toast));
+                        grantToast.setDuration(Toast.LENGTH_LONG);
+                        Utils.setText4Toasty(grantToast, this.getString(R.string.granted_multi_fail_toast));
                     }
-                    grantToast.setGravity(Gravity.CENTER, 0, -metrics.heightPixels / 4);
+                    grantToast.setGravity(Gravity.CENTER, 0, 0);
                     grantToast.show();
                 }
 
@@ -247,11 +249,16 @@ public class ScanActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             if (requestCode == Const.PICK_IMG_REQUEST) {
-                Uri uri = data.getData();
+                final Uri uri = data.getData();
                 try {
                     assert uri != null;
-                    acquiredBmp = BitmapFactory.decodeStream(this.getContentResolver().openInputStream(uri));
-                } catch (FileNotFoundException ignore) {
+                    final Bitmap bmp = BitmapFactory.decodeStream(
+                            this.getContentResolver().openInputStream(uri));
+                    giveBmp2Process(bmp);
+                } catch (FileNotFoundException e) {
+                    Toasty.error(ScanActivity.this,
+                            getString(R.string.err_file_not_find),
+                            Toast.LENGTH_LONG).show();
                 }
             }
         }

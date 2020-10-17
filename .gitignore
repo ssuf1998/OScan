@@ -105,8 +105,10 @@ lint/tmp/
 import-summary.txt
 opencv/
 app/src/main/jniLibs/
-app/build
-osactionsheet/build
+app/build/
+osactionsheet/build/
+app/libs/
+app/src/main/assets/
 
 .gradle
 **/build/

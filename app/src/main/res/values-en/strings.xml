@@ -18,4 +18,5 @@
     <string name="action_sheet_cancel">Cancel</string>
     <string name="granted_fail_toast">Authorize failed!</string>
     <string name="granted_multi_fail_toast">Multiple attempts to authorize failed. Please try to authorize in the settings.</string>
+    <string name="err_file_not_find">Cannot find the file.</string>
 </resources>

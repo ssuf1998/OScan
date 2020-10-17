@@ -15,6 +15,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.dnn.Dnn;
+import org.opencv.dnn.Net;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -22,12 +24,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+@Deprecated
 public class OSCore {
     private Mat resMat;
     private Mat procMat;
     private MatOfPoint biggestRectPts;
-    private Point[] cornerPts = new Point[4];
-    private Point centerPts = new Point(0, 0);
+    private final Point[] cornerPts = new Point[4];
+    private final Point centerPts = new Point(0, 0);
 
     public OSCore() {
     }
@@ -65,6 +68,7 @@ public class OSCore {
         return Utils.mat2Bmp(procMat);
     }
 
+
     public OSCore grey() {
         Imgproc.cvtColor(procMat, procMat, Imgproc.COLOR_BGR2GRAY);
         return this;
@@ -76,27 +80,27 @@ public class OSCore {
     }
 
     public OSCore adaptiveLightThreshold(int winSize, boolean highScan) {
-        int halfWin = winSize / 2;
-        int processors = Runtime.getRuntime().availableProcessors();
-        int threadCount = (int) (processors * 0.75);
+        final int halfWin = winSize / 2;
+        final int processors = Runtime.getRuntime().availableProcessors();
+        final int threadCount = (int) (processors * 0.75);
 
-        int r = procMat.rows();
-        int c = procMat.cols();
+        final int r = procMat.rows();
+        final int c = procMat.cols();
 
-        int smlR;
-        int smlC;
+        final int smlR;
+        final int smlC;
         Size smlSize = computeAspectSize(procMat.size(), highScan ? 512 : 256);
         smlR = (int) smlSize.height;
         smlC = (int) smlSize.width;
 
-        Mat smlResMat = procMat.clone();
+        final Mat smlResMat = procMat.clone();
         Imgproc.resize(smlResMat, smlResMat, new Size(smlC, smlR));
         Imgproc.GaussianBlur(smlResMat, smlResMat,
                 new Size(9, 9), 0);
 
-        Mat[] tmpMats = new Mat[threadCount];
-        Mat[] tmpMatChunks = new Mat[threadCount];
-        Thread[] threads = new Thread[threadCount];
+        final Mat[] tmpMats = new Mat[threadCount];
+        final Mat[] tmpMatChunks = new Mat[threadCount];
+        final Thread[] threads = new Thread[threadCount];
 
         for (int i = 0; i < threadCount; i++) {
             tmpMatChunks[i] = new Mat(smlResMat,
@@ -115,11 +119,10 @@ public class OSCore {
             try {
                 threads[i].join();
             } catch (Exception ignored) {
-
             }
         }
 
-        Mat tmpMat = new Mat(new Size(smlC, smlR), CvType.CV_8UC1);
+        final Mat tmpMat = new Mat(new Size(smlC, smlR), CvType.CV_8UC1);
 
         Core.vconcat(Arrays.asList(tmpMats), tmpMat);
         Imgproc.resize(tmpMat, tmpMat, new Size(c, r));
@@ -136,10 +139,10 @@ public class OSCore {
     }
 
     private Mat ALTThread(Mat matChunk, int halfWin) {
-        int r = matChunk.rows();
-        int c = matChunk.cols();
+        final int r = matChunk.rows();
+        final int c = matChunk.cols();
 
-        Mat retMatChunk = new Mat(r, c, CvType.CV_8UC1);
+        final Mat retMatChunk = new Mat(r, c, CvType.CV_8UC1);
 
         for (int y = 0; y < r; y++) {
             for (int x = 0; x < c; x++) {
@@ -155,13 +158,12 @@ public class OSCore {
                 Core.sort(subMat, subMat, Core.SORT_DESCENDING);
 
                 int maxValuesSum = 0;
-                int bgValue;
                 for (int s = 1; s < 6; s++) {
                     maxValuesSum += (int) subMat.get(0, s)[0];
                 }
-                bgValue = maxValuesSum / 5;
+                final int bgValue = maxValuesSum / 5;
 
-                int resValue = (int) matChunk.get(y, x)[0];
+                final int resValue = (int) matChunk.get(y, x)[0];
                 int smallResValue;
                 if (bgValue > resValue) {
                     smallResValue = (int) (255 - kFuc(bgValue) * (bgValue - resValue));
@@ -177,9 +179,9 @@ public class OSCore {
         return retMatChunk;
     }
 
-    public static float kFuc(int b) {
-        float B1 = 2.5f;
-        float B2 = 1f;
+    private static float kFuc(int b) {
+        final float B1 = 2.5f;
+        final float B2 = 1f;
 
         if (b < 20) {
             return B1;
@@ -196,7 +198,7 @@ public class OSCore {
         double w = size.width;
         double h = size.height;
 
-        double ratio = w / h;
+        final double ratio = w / h;
 
         if (w >= h) {
             w = prefLongest;
@@ -211,21 +213,21 @@ public class OSCore {
 
 
     public OSCore computeBiggestRectPts() {
-        ArrayList<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
+        final ArrayList<MatOfPoint> contours = new ArrayList<>();
+        final Mat hierarchy = new Mat();
 
         Imgproc.findContours(procMat, contours, hierarchy,
                 Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        ArrayList<MatOfPoint> hullList = new ArrayList<>();
+        final ArrayList<MatOfPoint> hullList = new ArrayList<>();
         for (int i = 0; i < contours.size(); i++) {
 
-            MatOfInt hullPointsIdx = new MatOfInt();
+            final MatOfInt hullPointsIdx = new MatOfInt();
             Imgproc.convexHull(contours.get(i), hullPointsIdx);
 
-            Point[] hullPoints = new Point[hullPointsIdx.rows()];
+            final Point[] hullPoints = new Point[hullPointsIdx.rows()];
             for (int j = 0; j < hullPointsIdx.col(0).total(); j++) {
-                int idx = (int) hullPointsIdx.get(j, 0)[0];
+                final int idx = (int) hullPointsIdx.get(j, 0)[0];
                 hullPoints[j] = new Point(contours.get(i).get(idx, 0));
             }
 
@@ -240,8 +242,8 @@ public class OSCore {
     }
 
     public OSCore computeCornerPts() {
-        List<Point> biggestHullPts = biggestRectPts.toList();
-        int len = biggestHullPts.size();
+        final List<Point> biggestHullPts = biggestRectPts.toList();
+        final int len = biggestHullPts.size();
 
         for (Point p : biggestHullPts) {
             centerPts.x += p.x;
@@ -250,10 +252,10 @@ public class OSCore {
         centerPts.x /= len;
         centerPts.y /= len;
 
-        double[] distances = {0, 0, 0, 0};
+        final double[] distances = {0, 0, 0, 0};
         for (Point p : biggestHullPts) {
-            double distance = eulerDistance(p, centerPts);
-            int quadrant = getQuadrant(p, centerPts);
+            final double distance = eulerDistance(p, centerPts);
+            final int quadrant = getQuadrant(p, centerPts);
 
             if (quadrant != -1 && distance > distances[quadrant]) {
                 distances[quadrant] = distance;
@@ -285,20 +287,20 @@ public class OSCore {
 
     // https://zhuanlan.zhihu.com/p/64025334
     public OSCore clipThenTransform(Point[] clipPts) {
-        Point tl = clipPts[0];
-        Point tr = clipPts[1];
-        Point br = clipPts[2];
-        Point bl = clipPts[3];
+        final Point tl = clipPts[0];
+        final Point tr = clipPts[1];
+        final Point br = clipPts[2];
+        final Point bl = clipPts[3];
 
-        double widthA = Math.sqrt(Math.pow(br.x - bl.x, 2) + Math.pow(br.y - bl.y, 2));
-        double widthB = Math.sqrt(Math.pow(tr.x - tl.x, 2) + Math.pow(tr.y - tl.y, 2));
-        double maxWidth = Math.max((int) widthA, (int) widthB);
+        final double widthA = Math.sqrt(Math.pow(br.x - bl.x, 2) + Math.pow(br.y - bl.y, 2));
+        final double widthB = Math.sqrt(Math.pow(tr.x - tl.x, 2) + Math.pow(tr.y - tl.y, 2));
+        final double maxWidth = Math.max((int) widthA, (int) widthB);
 
-        double heightA = Math.sqrt(Math.pow(tr.x - br.x, 2) + Math.pow(tr.y - br.y, 2));
-        double heightB = Math.sqrt(Math.pow(tl.x - bl.x, 2) + Math.pow(tl.y - bl.y, 2));
-        double maxHeight = Math.max((int) heightA, (int) heightB);
+        final double heightA = Math.sqrt(Math.pow(tr.x - br.x, 2) + Math.pow(tr.y - br.y, 2));
+        final double heightB = Math.sqrt(Math.pow(tl.x - bl.x, 2) + Math.pow(tl.y - bl.y, 2));
+        final double maxHeight = Math.max((int) heightA, (int) heightB);
 
-        MatOfPoint2f dst = new MatOfPoint2f(
+        final MatOfPoint2f dst = new MatOfPoint2f(
                 new Point(0, 0),
                 new Point(maxWidth - 1, 0),
                 new Point(maxWidth - 1, maxHeight - 1),
@@ -307,7 +309,7 @@ public class OSCore {
 
 
         MatOfPoint2f cornerPtsMat = new MatOfPoint2f(cornerPts);
-        Mat getMat = Imgproc.getPerspectiveTransform(cornerPtsMat, dst);
+        final Mat getMat = Imgproc.getPerspectiveTransform(cornerPtsMat, dst);
 
         Imgproc.warpPerspective(resMat, procMat, getMat, new Size(maxWidth, maxHeight));
 

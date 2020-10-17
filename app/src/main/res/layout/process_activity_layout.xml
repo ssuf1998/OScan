@@ -4,10 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="@android:color/white"
     tools:context=".ProcessActivity">
 
     <ImageView
+        android:id="@+id/cropImgView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:contentDescription="@string/crop_img_desc"
@@ -18,7 +19,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.8">
-
 
     </ImageView>
 
