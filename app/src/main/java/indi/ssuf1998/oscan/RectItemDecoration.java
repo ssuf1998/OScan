@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class RectItemDecoration extends RecyclerView.ItemDecoration {
-    private Rect rect;
+    private final Rect rect;
 
     @Override
     public void getItemOffsets(@NonNull Rect outRect,

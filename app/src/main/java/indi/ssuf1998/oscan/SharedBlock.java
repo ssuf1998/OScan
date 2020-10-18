@@ -28,15 +28,16 @@ public class SharedBlock {
         return v;
     }
 
-    public Object getData(String key) {
+    public Object getData(String key, Object default_) {
         if (!dataMap.containsKey(key))
-            return null;
+            return default_;
         return dataMap.get(key);
     }
 
     public void putData(String key, Object value) {
         dataMap.put(key, value);
     }
+
 
     public void removeData(String key) {
         dataMap.remove(key);

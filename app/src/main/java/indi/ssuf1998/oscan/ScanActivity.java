@@ -24,6 +24,7 @@ import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -45,10 +46,9 @@ public class ScanActivity extends AppCompatActivity {
     private CameraSelector cameraSelector;
     private ImageCapture capture;
     private Preview preview;
-    private Camera camera;
+//    private Camera camera;
 
     private final SharedBlock block = SharedBlock.getInstance();
-    private Bitmap acquiredBmp;
     private OSMenuActionSheet grantedMenuAS;
     private int tryTimes = 0;
 
@@ -60,7 +60,9 @@ public class ScanActivity extends AppCompatActivity {
         append(ImageCapture.FLASH_MODE_OFF,
                 R.drawable.ic_fluent_flash_off_24_selector);
     }};
-    int flashNowMode = ImageCapture.FLASH_MODE_AUTO;
+    private int flashNowMode = ImageCapture.FLASH_MODE_AUTO;
+
+    private float screenRatio = 0.75f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,17 +72,25 @@ public class ScanActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         usesPermissions();
 
+        screenRatio = Utils.getScreenRatio(this);
+
         binding.getRoot().post(() -> {
             initUI();
             bindListeners();
         });
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        binding.takePicBtn.setClickable(true);
+    }
+
     private void initUI() {
         binding.takePicBtn.setTranslationY(-binding.takePicBtn.getHeight() * (1 / 3f));
-        binding.pickPicBtn.setTranslationY(binding.takePicBtn.getHeight() / 2f +
+        binding.pickPicBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.5f +
                 binding.takePicBtn.getTranslationY());
-        binding.switchFlashBtn.setTranslationY(binding.takePicBtn.getHeight() / 2f +
+        binding.switchFlashBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.5f +
                 binding.takePicBtn.getTranslationY());
 
         final ArrayList<OSMASItem> items = new ArrayList<>();
@@ -90,7 +100,7 @@ public class ScanActivity extends AppCompatActivity {
                 .setTypefaceStyle(Typeface.BOLD)
         );
         items.add(new OSMASItem(getString(R.string.pick_pic_btn_desc)));
-        items.add(new OSMASItem(getString(R.string.action_sheet_cancel)));
+        items.add(new OSMASItem(getString(R.string.dialog_cancel)));
 
         grantedMenuAS = new OSMenuActionSheet(getString(R.string.granted_action_sheet_title), items);
         grantedMenuAS.setCancelable(false);
@@ -129,6 +139,7 @@ public class ScanActivity extends AppCompatActivity {
     private void giveBmp2Process(Bitmap bmp) {
         final Intent intent = new Intent(this, ProcessActivity.class);
         block.putData("bmp", bmp);
+
         this.startActivity(intent);
     }
 
@@ -162,6 +173,7 @@ public class ScanActivity extends AppCompatActivity {
         binding.pickPicBtn.setOnClickListener(view -> pickPic());
 
         binding.takePicBtn.setOnClickListener(view -> {
+            binding.takePicBtn.setClickable(false);
             capture.takePicture(
                     ContextCompat.getMainExecutor(ScanActivity.this),
                     new ImageCapture.OnImageCapturedCallback() {
@@ -186,19 +198,26 @@ public class ScanActivity extends AppCompatActivity {
         final OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int orientation) {
-                final int rotation;
+                final int cameraRotation;
+                final float btnRotation;
 
                 if (orientation >= 45 && orientation < 135) {
-                    rotation = Surface.ROTATION_270;
+                    cameraRotation = Surface.ROTATION_270;
+                    btnRotation = 270;
                 } else if (orientation >= 135 && orientation < 225) {
-                    rotation = Surface.ROTATION_180;
+                    cameraRotation = Surface.ROTATION_180;
+                    btnRotation = 180;
                 } else if (orientation >= 225 && orientation < 315) {
-                    rotation = Surface.ROTATION_90;
+                    cameraRotation = Surface.ROTATION_90;
+                    btnRotation = 90;
                 } else {
-                    rotation = Surface.ROTATION_0;
+                    cameraRotation = Surface.ROTATION_0;
+                    btnRotation = 0;
                 }
 
-                capture.setTargetRotation(rotation);
+                capture.setTargetRotation(cameraRotation);
+                binding.pickPicBtn.setRotation(btnRotation);
+                binding.switchFlashBtn.setRotation(btnRotation);
             }
         };
 
@@ -209,7 +228,10 @@ public class ScanActivity extends AppCompatActivity {
                 .build();
 
         preview.setSurfaceProvider(binding.previewView.getSurfaceProvider());
-        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+
+//        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+
     }
 
     @Override

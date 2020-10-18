@@ -15,11 +15,12 @@
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/mAppBarLayout"
-            app:elevation="0dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorBackground2"
-            android:fitsSystemWindows="true">
+            android:background="@color/colorPrimary"
+            android:fitsSystemWindows="true"
+
+            app:elevation="0dp">
 
             <com.google.android.material.appbar.CollapsingToolbarLayout
                 android:layout_width="match_parent"
@@ -43,7 +44,7 @@
                         android:layout_gravity="center"
                         android:paddingVertical="16dp"
                         android:text="@string/bottom_nav_home"
-                        android:textColor="@color/colorText"
+                        android:textColor="@android:color/white"
                         android:textSize="24sp"
 
                         android:textStyle="bold" />

@@ -7,15 +7,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import org.opencv.osgi.OpenCVNativeLoader;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
 import indi.ssuf1998.osactionsheet.OSMASItem;
 import indi.ssuf1998.osactionsheet.OSMenuActionSheet;
 import indi.ssuf1998.oscan.adapter.MainViewPager2Adapter;
-import indi.ssuf1998.oscan.core.OSCoreHED;
 import indi.ssuf1998.oscan.databinding.MainActivityLayoutBinding;
 
 public class MainActivity extends AppCompatActivity {
@@ -23,24 +19,12 @@ public class MainActivity extends AppCompatActivity {
     private OSMenuActionSheet scanMenuAS;
     private ArrayList<Fragment> fragments;
 
-    private final SharedBlock mBlock = SharedBlock.getInstance();
-
-    static {
-        new OpenCVNativeLoader().init();
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         binding = MainActivityLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-
-        try {
-            mBlock.putData("hed", new OSCoreHED(this));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         binding.getRoot().post(() -> {
             initUI();

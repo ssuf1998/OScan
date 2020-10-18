@@ -15,8 +15,11 @@
     <string name="crop_img_desc">裁剪图像</string>
     <string name="granted_action_sheet_title">没有获取到相机授权！</string>
     <string name="granted_action_sheet_auth">去授权</string>
-    <string name="action_sheet_cancel">取消</string>
+    <string name="dialog_cancel">取消</string>
     <string name="granted_fail_toast">授权失败！</string>
     <string name="granted_multi_fail_toast">多次尝试授权均失败，请尝试在设置中授权。</string>
     <string name="err_file_not_find">找不到指定文件。</string>
+    <string name="dialog_confirm">确定</string>
+    <string name="err_dialog_title">错误</string>
+    <string name="err_dialog_msg_pre">程序即将退出，错误信息：</string>
 </resources>

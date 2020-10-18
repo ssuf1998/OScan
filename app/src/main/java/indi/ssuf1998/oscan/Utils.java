@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.ImageProxy;
 
@@ -31,61 +33,11 @@ public class Utils {
         return result;
     }
 
-    public static void setFullScreen(Window win, boolean full) {
-        if (full) {
-            win.getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-//                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-
-            );
-        } else {
-            win.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE | View.SYSTEM_UI_LAYOUT_FLAGS);
-        }
-    }
-
-    public static void setFullScreen(Window win) {
-        setFullScreen(win, true);
-    }
-
-    public static void setActionBar(AppCompatActivity activity, boolean hide) {
-        activity.getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-        final ActionBar actionBar = activity.getSupportActionBar();
-        assert actionBar != null;
-        if (hide) {
-            actionBar.hide();
-        } else {
-            actionBar.show();
-        }
-    }
-
-    public static void setActionBar(AppCompatActivity activity) {
-        setActionBar(activity, true);
-    }
-
-
     public static Bitmap imgProxy2Bitmap(ImageProxy img) {
         final ByteBuffer buffer = img.getPlanes()[0].getBuffer();
         final byte[] bytes = new byte[buffer.capacity()];
         buffer.get(bytes);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
-    }
-
-    public static byte[] imgProxy2Bytes(ImageProxy img) {
-        final ByteBuffer buffer = img.getPlanes()[0].getBuffer();
-        final byte[] bytes = new byte[buffer.capacity()];
-        buffer.get(bytes);
-        return bytes;
-    }
-
-    public static byte[] bmp2Bytes(Bitmap bmp) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        return stream.toByteArray();
     }
 
     public static void setText4Toasty(Toast toast, String newStr) {
@@ -100,4 +52,15 @@ public class Utils {
         assert toastTextView != null;
         toastTextView.setText(c.getText(resId));
     }
+
+    public static float getScreenRatio(Activity activity) {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int height = displayMetrics.heightPixels;
+        int width = displayMetrics.widthPixels;
+
+        return (float) width / height;
+
+    }
+
 }

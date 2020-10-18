@@ -3,7 +3,6 @@ package indi.ssuf1998.oscan.core;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -23,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -36,7 +34,7 @@ public class OSCoreHED {
     private final Point centerPts = new Point(0, 0);
 
     // 感谢提供学习代码以及模型
-    // 没有时间去找数据，写模型和训练模型了……
+    // 没有时间去找数据，写模型和训练模型了，也没有哪个本事哈哈哈
     // 本应该用vgg16风格来实现HED的，这里的模型用的是mobilenet v2跑的
     // http://fengjian0106.github.io/2017/05/08/Document-Scanning-With-TensorFlow-And-OpenCV/
     // https://github.com/fengjian0106/hed-tutorial-for-document-scanning
