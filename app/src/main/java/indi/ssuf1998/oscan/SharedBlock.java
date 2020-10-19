@@ -28,9 +28,9 @@ public class SharedBlock {
         return v;
     }
 
-    public Object getData(String key, Object default_) {
+    public Object getData(String key, Object defaultValue) {
         if (!dataMap.containsKey(key))
-            return default_;
+            return defaultValue;
         return dataMap.get(key);
     }
 

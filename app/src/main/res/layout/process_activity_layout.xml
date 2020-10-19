@@ -4,35 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
+    android:background="@android:color/darker_gray"
     tools:context=".ProcessActivity">
 
-    <ImageView
+    <indi.ssuf1998.oscan.CropImageView
         android:id="@+id/cropImgView"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@android:color/darker_gray"
         android:contentDescription="@string/crop_img_desc"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:src="@drawable/big_ico"
+        app:layout_constraintBottom_toTopOf="@+id/cancelTextViewBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.75"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.8">
 
-    </ImageView>
+    </indi.ssuf1998.oscan.CropImageView>
 
     <TextView
         android:id="@+id/cancelTextViewBtn"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/white_rect_ripple"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
         android:text="@string/dialog_cancel"
         android:textColor="@android:color/white"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHeight_percent='0.075'
         app:layout_constraintStart_toStartOf="parent"
@@ -42,13 +44,13 @@
         android:id="@+id/confirmTextViewBtn"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="?attr/selectableItemBackground"
+        android:background="@drawable/white_rect_ripple"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
         android:text="@string/dialog_confirm"
         android:textColor="@android:color/white"
-        android:textSize="20sp"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent='0.075'

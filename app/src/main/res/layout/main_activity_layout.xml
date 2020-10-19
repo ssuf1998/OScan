@@ -6,62 +6,45 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/mAppBarLayout"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_above="@id/bottomNav"
-        android:layout_alignParentTop="true"
-        android:fitsSystemWindows="true">
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
 
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/mAppBarLayout"
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/mToolBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            android:fitsSystemWindows="true"
+            android:minHeight="?actionBarSize">
 
-            app:elevation="0dp">
-
-            <com.google.android.material.appbar.CollapsingToolbarLayout
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/mToolBarTitle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_scrollFlags="scroll|snap|enterAlways"
-                app:scrimAnimationDuration="0"
-                app:statusBarScrim="@color/colorBackground2"
-                app:titleEnabled="false">
+                android:layout_gravity="center"
+                android:paddingTop="0dp"
+                android:paddingBottom="12dp"
+                android:text="@string/bottom_nav_home"
+                android:textColor="@android:color/white"
+                android:textSize="24sp"
 
-                <androidx.appcompat.widget.Toolbar
-                    android:id="@+id/mToolBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="?actionBarSize"
-                    app:layout_collapseMode="pin">
+                android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/mToolBarTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:paddingVertical="16dp"
-                        android:text="@string/bottom_nav_home"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp"
+        </androidx.appcompat.widget.Toolbar>
 
-                        android:textStyle="bold" />
+    </com.google.android.material.appbar.AppBarLayout>
 
-                </androidx.appcompat.widget.Toolbar>
-            </com.google.android.material.appbar.CollapsingToolbarLayout>
-        </com.google.android.material.appbar.AppBarLayout>
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/mViewPager2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/bottomNav"
+        android:layout_below="@id/mAppBarLayout">
 
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/mViewPager2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        </androidx.viewpager2.widget.ViewPager2>
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </androidx.viewpager2.widget.ViewPager2>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNav"
@@ -73,7 +56,6 @@
         app:itemHorizontalTranslationEnabled="false"
         app:labelVisibilityMode="unlabeled"
         app:menu="@menu/bottom_nav_menu" />
-
 
 </RelativeLayout>
 

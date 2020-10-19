@@ -1,6 +1,14 @@
 package indi.ssuf1998.oscan;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,10 +41,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initUI() {
-        fragments = new ArrayList<Fragment>() {{
-            add(new HomeFragment());
-            add(new HomeFragment());
-        }};
+        fragments = new ArrayList<>();
+        fragments.add(new HomeFragment());
+        fragments.add(new HomeFragment());
 
         final MainViewPager2Adapter MVP2Adapter = new MainViewPager2Adapter(this, fragments);
         binding.mViewPager2.setAdapter(MVP2Adapter);

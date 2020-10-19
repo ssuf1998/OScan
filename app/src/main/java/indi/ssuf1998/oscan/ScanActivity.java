@@ -62,8 +62,6 @@ public class ScanActivity extends AppCompatActivity {
     }};
     private int flashNowMode = ImageCapture.FLASH_MODE_AUTO;
 
-    private float screenRatio = 0.75f;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,25 +70,17 @@ public class ScanActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         usesPermissions();
 
-        screenRatio = Utils.getScreenRatio(this);
-
         binding.getRoot().post(() -> {
             initUI();
             bindListeners();
         });
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        binding.takePicBtn.setClickable(true);
-    }
-
     private void initUI() {
         binding.takePicBtn.setTranslationY(-binding.takePicBtn.getHeight() * (1 / 3f));
-        binding.pickPicBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.5f +
+        binding.pickPicBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.75f +
                 binding.takePicBtn.getTranslationY());
-        binding.switchFlashBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.5f +
+        binding.switchFlashBtn.setTranslationY(binding.takePicBtn.getHeight() / 1.75f +
                 binding.takePicBtn.getTranslationY());
 
         final ArrayList<OSMASItem> items = new ArrayList<>();
@@ -139,8 +129,8 @@ public class ScanActivity extends AppCompatActivity {
     private void giveBmp2Process(Bitmap bmp) {
         final Intent intent = new Intent(this, ProcessActivity.class);
         block.putData("bmp", bmp);
-
         this.startActivity(intent);
+        binding.takePicBtn.setClickable(true);
     }
 
     private void bindCameraListeners() {

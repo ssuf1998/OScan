@@ -9,7 +9,10 @@
     <style name="MainActivity" parent="AppTheme">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+    </style>
+
+    <style name="SplashActivity" parent="MainActivity">
     </style>
 
     <style name="ScanActivity" parent="AppTheme">

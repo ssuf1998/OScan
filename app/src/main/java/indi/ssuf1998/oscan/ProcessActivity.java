@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.opencv.core.Point;
+import org.opencv.osgi.OpenCVNativeLoader;
 
 import indi.ssuf1998.oscan.core.OSCoreHED;
 import indi.ssuf1998.oscan.databinding.ProcessActivityLayoutBinding;
@@ -23,6 +24,10 @@ public class ProcessActivity extends AppCompatActivity {
 
     private Point[] cornerPts;
 
+    static {
+        new OpenCVNativeLoader().init();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,21 +43,31 @@ public class ProcessActivity extends AppCompatActivity {
     }
 
     private void initUI() {
-        resBmp = (Bitmap) mBlock.getDataThenSweep("bmp");
-        binding.cropImgView.setImageBitmap(resBmp);
+//        resBmp = (Bitmap) mBlock.getDataThenSweep("bmp");
+//        binding.cropImgView.setImageBitmap(resBmp);
+
+        cornerPts = new Point[]{
+                new Point(64, 64),
+                new Point(256, 64),
+                new Point(384, 384),
+                new Point(64, 256),
+        };
+
+        binding.cropImgView.setCornerPts(cornerPts);
 
         binding.cropImgView.setOnClickListener(view -> {
-            procBmp = osCoreHED
-                    .setResBmp(resBmp)
-                    .detect()
-                    .drawMarks()
-                    .getProcBmp();
+//            procBmp = osCoreHED
+//                    .setResBmp(resBmp)
+//                    .detect()
+//                    .getProcBmp();
 
-            cornerPts = osCoreHED.getCornerPts();
+//            cornerPts = osCoreHED.getCornerPts();
 
-            osCoreHED.sweep();
+//            osCoreHED.sweep();
 
-            binding.cropImgView.setImageBitmap(procBmp);
+//            binding.cropImgView.setImageBitmap(procBmp);
+
+
         });
     }
 

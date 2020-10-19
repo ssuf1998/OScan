@@ -2,6 +2,7 @@ package indi.ssuf1998.oscan.adapter;
 
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -12,7 +13,7 @@ import indi.ssuf1998.oscan.databinding.DocLayoutBinding;
 
 public class DocAdapter extends RecyclerView.Adapter<DocAdapter.VH> {
 
-    private List<Doc> docList;
+    private final List<Doc> docList;
 
     public DocAdapter(List<Doc> docList) {
         this.docList = docList;
@@ -38,7 +39,7 @@ public class DocAdapter extends RecyclerView.Adapter<DocAdapter.VH> {
     }
 
     public static class VH extends RecyclerView.ViewHolder {
-        private DocLayoutBinding binding;
+        private final DocLayoutBinding binding;
 
         public DocLayoutBinding getBinding() {
             return binding;
@@ -47,7 +48,6 @@ public class DocAdapter extends RecyclerView.Adapter<DocAdapter.VH> {
         public VH(@NonNull DocLayoutBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-
         }
     }
 }

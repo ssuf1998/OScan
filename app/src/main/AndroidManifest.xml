@@ -17,12 +17,8 @@
         <activity
             android:name=".SplashActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+            android:theme="@style/SplashActivity">
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <activity
@@ -43,6 +39,12 @@
             android:name=".ProcessActivity"
             android:screenOrientation="portrait"
             android:theme="@style/ScanActivity">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
         </activity>
     </application>
