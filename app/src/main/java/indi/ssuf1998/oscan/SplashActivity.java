@@ -11,6 +11,7 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.opencv.core.Mat;
 import org.opencv.osgi.OpenCVNativeLoader;
 
 import java.io.IOException;

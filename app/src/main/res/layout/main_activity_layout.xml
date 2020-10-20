@@ -51,7 +51,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/colorBackground2"
+        android:background="@color/btmNavBg"
         app:elevation="0dp"
         app:itemHorizontalTranslationEnabled="false"
         app:labelVisibilityMode="unlabeled"

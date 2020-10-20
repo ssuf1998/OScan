@@ -1,15 +1,18 @@
 package indi.ssuf1998.oscan;
 
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
@@ -18,18 +21,21 @@ import androidx.appcompat.widget.AppCompatImageView;
 
 import org.opencv.core.Point;
 
+import java.util.Arrays;
+
 public class CropImageView extends AppCompatImageView {
     private Point[] cornerPts;
 
-    private float globalStrokeWidth;
     private int draggingPtIdx;
     private final Point lastTimePt = new Point();
-    private Rect drawableRect;
+    private Rect workRect;
+    private float scaleX, scaleY;
 
-    private int cornerPtsColor = Color.RED;
-    private int cornerPtsRadius = 45;
-
-    private int edgeColor = Color.RED;
+    private int mStrokeWidth;
+    private int cornerPtsColor;
+    private int cornerPtsRadius;
+    private int edgeColor;
+    private int maskAlpha;
 
     private Paint cornerPtsPaint;
     private Paint edgesPaint;
@@ -46,6 +52,14 @@ public class CropImageView extends AppCompatImageView {
     public CropImageView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
+        initAttrs(context, attrs);
+
+        final int padding = cornerPtsRadius + (int) Math.ceil(mStrokeWidth / 2f);
+        this.setPadding(padding,
+                padding,
+                padding,
+                padding);
+
         initPaint();
     }
 
@@ -54,29 +68,73 @@ public class CropImageView extends AppCompatImageView {
         invalidate();
     }
 
-    private void initPaint() {
-        globalStrokeWidth = cornerPtsRadius / 3f;
+    public Point[] getCornerPts() {
+        final Point[] ret = Arrays.copyOf(cornerPts, cornerPts.length);
+        for (Point p : ret) {
+            p.x = (p.x - workRect.left) / scaleX;
+            p.y = (p.y - workRect.top) / scaleY;
+        }
+        return ret;
+    }
 
+    private void initPaint() {
         cornerPtsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         cornerPtsPaint.setColor(cornerPtsColor);
-        cornerPtsPaint.setStrokeWidth(globalStrokeWidth);
+        cornerPtsPaint.setStrokeWidth(mStrokeWidth);
         cornerPtsPaint.setStyle(Paint.Style.STROKE);
+        cornerPtsPaint.setShadowLayer(5f, 0, 0,
+                Color.parseColor("#80000000"));
 
         edgesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         edgesPaint.setColor(edgeColor);
-        edgesPaint.setStrokeWidth(globalStrokeWidth);
+        edgesPaint.setStrokeWidth(mStrokeWidth);
         edgesPaint.setStyle(Paint.Style.STROKE);
+        edgesPaint.setShadowLayer(5f, 0, 0,
+                Color.parseColor("#80000000"));
 
         maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setColor(Color.BLACK);
         maskPaint.setStyle(Paint.Style.FILL);
     }
 
-    private void initDrawableRect() {
-        if (drawableRect == null)
-            drawableRect = new Rect(
-                    0, 0, getWidth(), getHeight()
+    private void initWorkRect() {
+        final Drawable d = getDrawable();
+        if (workRect == null && d != null) {
+            final float[] matrix = new float[9];
+            getImageMatrix().getValues(matrix);
+            scaleX = matrix[Matrix.MSCALE_X];
+            scaleY = matrix[Matrix.MSCALE_Y];
+            final int origW = d.getIntrinsicWidth();
+            final int origH = d.getIntrinsicHeight();
+
+            final int scaleW = Math.round(origW * scaleX);
+            final int scaleH = Math.round(origH * scaleY);
+
+            workRect = new Rect(
+                    (getWidth() - scaleW) / 2,
+                    (getHeight() - scaleH) / 2,
+                    (getWidth() + scaleW) / 2,
+                    (getHeight() + scaleH) / 2
             );
+
+            for (Point p : cornerPts) {
+                p.x = (p.x * scaleX) + workRect.left;
+                p.y = (p.y * scaleY) + workRect.top;
+            }
+        }
+    }
+
+    private void initAttrs(Context context, AttributeSet attrs) {
+        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.CropImageView);
+
+        mStrokeWidth = ta.getDimensionPixelSize(R.styleable.CropImageView_strokeWidth, 8);
+        cornerPtsColor = ta.getColor(R.styleable.CropImageView_cornerPtsColor, Color.WHITE);
+        cornerPtsRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cornerPtsRadius, 36);
+        edgeColor = ta.getColor(R.styleable.CropImageView_edgeColor, Color.WHITE);
+        maskAlpha = ta.getInteger(R.styleable.CropImageView_maskAlpha, 96);
+        maskAlpha = Math.max(Math.min(maskAlpha, 255), 0);
+
+        ta.recycle();
     }
 
     @Override
@@ -85,10 +143,9 @@ public class CropImageView extends AppCompatImageView {
         if (isCornerPtsInvalid())
             return;
 
-        initDrawableRect();
+        initWorkRect();
 
         drawCropRect(canvas);
-        drawCornerPts(canvas);
     }
 
     private void drawCornerPts(Canvas canvas) {
@@ -108,15 +165,16 @@ public class CropImageView extends AppCompatImageView {
 
         drawMask(canvas, cropPath);
         canvas.drawPath(cropPath, edgesPaint);
+        drawCornerPts(canvas);
     }
 
     private void drawMask(Canvas canvas, Path cropPath) {
 
-        int layerId = canvas.saveLayer(drawableRect.left, drawableRect.top, drawableRect.right, drawableRect.bottom,
+        int layerId = canvas.saveLayer(workRect.left, workRect.top, workRect.right, workRect.bottom,
                 null, Canvas.ALL_SAVE_FLAG);
 
-        maskPaint.setAlpha(127);
-        canvas.drawRect(drawableRect, maskPaint);
+        maskPaint.setAlpha(maskAlpha);
+        canvas.drawRect(workRect, maskPaint);
         maskPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         maskPaint.setAlpha(255);
         canvas.drawPath(cropPath, maskPaint);
@@ -131,17 +189,22 @@ public class CropImageView extends AppCompatImageView {
 
         if (action == MotionEvent.ACTION_DOWN) {
             draggingPtIdx = getTouchedPtIdx(event);
+            if (draggingPtIdx != -1) {
+                lastTimePt.x = cornerPts[draggingPtIdx].x;
+                lastTimePt.y = cornerPts[draggingPtIdx].y;
+            }
         } else if (action == MotionEvent.ACTION_MOVE &&
                 draggingPtIdx != -1) {
-            //TODO
-            // 关于在拖动阶段就控制选区必须为凸包
-            // 可以先判断完了再去复制画，如果不符合就返回上一次滑动的状态
-            // 缺点和明显，会使得这个点在两个状态反复横跳，导致界面有时候会狂闪
-            // Microsoft的Office移动端用的就是这种方法
-            // 而扫描全能王用的是选择完之后再来判断（也很麻烦呀）
-            cornerPts[draggingPtIdx].x = event.getX();
-            cornerPts[draggingPtIdx].y = event.getY();
+            final float[] canMoveXY = getMoveValue(event.getX(), event.getY());
+            cornerPts[draggingPtIdx].x = canMoveXY[0];
+            cornerPts[draggingPtIdx].y = canMoveXY[1];
         } else if (action == MotionEvent.ACTION_UP) {
+            if (!isConvex()) {
+                cornerPts[draggingPtIdx].x = lastTimePt.x;
+                cornerPts[draggingPtIdx].y = lastTimePt.y;
+                lastTimePt.x = 0;
+                lastTimePt.y = 0;
+            }
             performClick();
         }
         invalidate();
@@ -155,6 +218,13 @@ public class CropImageView extends AppCompatImageView {
     @Override
     public boolean performClick() {
         return super.performClick();
+    }
+
+
+    @Override
+    public void setImageBitmap(Bitmap bm) {
+        super.setImageBitmap(bm);
+        workRect = null;
     }
 
     private boolean isCornerPtsInvalid() {
@@ -193,6 +263,29 @@ public class CropImageView extends AppCompatImageView {
             }
         }
         return -1;
+    }
+
+    private float[] getMoveValue(float x, float y) {
+
+        final int offset = (int) Math.ceil(mStrokeWidth / 2f);
+        final float maxX = Math.max(
+                Math.max(workRect.left + offset, x),
+                workRect.right - offset);
+        final float minX = Math.min(
+                Math.min(workRect.left + offset, x),
+                workRect.right - offset);
+
+        final float maxY = Math.max(Math.max(
+                workRect.top + offset, y),
+                workRect.bottom - offset);
+        final float minY = Math.min(
+                Math.min(workRect.top + offset, y),
+                workRect.bottom - offset);
+
+        return new float[]{
+                workRect.left + x + workRect.right - maxX - minX,
+                workRect.top + y + workRect.bottom - maxY - minY,
+        };
     }
 
 

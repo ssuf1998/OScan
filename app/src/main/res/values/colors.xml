@@ -2,8 +2,5 @@
 <resources>
     <color name="colorPrimary">#005bea</color>
     <color name="colorPrimaryDark">#003487</color>
-    <color name="colorAccent">#FFFFFF</color>
-    <color name="colorBackground">#EEE</color>
-    <color name="colorBackground2">#F2F2F2</color>
-    <color name="colorText">#666</color>
+    <color name="btmNavBg">#F2F2F2</color>
 </resources>

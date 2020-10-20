@@ -1,7 +1,13 @@
 package indi.ssuf1998.oscan;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,15 +24,10 @@ public class ProcessActivity extends AppCompatActivity {
 
     private final SharedBlock mBlock = SharedBlock.getInstance();
     private Bitmap resBmp;
-    private Bitmap procBmp;
 
     private OSCoreHED osCoreHED;
 
     private Point[] cornerPts;
-
-    static {
-        new OpenCVNativeLoader().init();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,38 +39,59 @@ public class ProcessActivity extends AppCompatActivity {
 
         binding.getRoot().post(() -> {
             initUI();
+            initListeners();
         });
 
     }
 
     private void initUI() {
-//        resBmp = (Bitmap) mBlock.getDataThenSweep("bmp");
-//        binding.cropImgView.setImageBitmap(resBmp);
+        binding.cropImgView.setVisibility(View.VISIBLE);
 
-        cornerPts = new Point[]{
-                new Point(64, 64),
-                new Point(256, 64),
-                new Point(384, 384),
-                new Point(64, 256),
-        };
+        resBmp = (Bitmap) mBlock.getDataThenSweep("bmp");
+        binding.cropImgView.setImageBitmap(resBmp);
 
-        binding.cropImgView.setCornerPts(cornerPts);
+        new Thread(() -> {
+            cornerPts = osCoreHED
+                    .setRes(resBmp)
+                    .detect()
+                    .getCornerPts();
+            binding.cropImgView.setCornerPts(cornerPts);
 
-        binding.cropImgView.setOnClickListener(view -> {
-//            procBmp = osCoreHED
-//                    .setResBmp(resBmp)
-//                    .detect()
-//                    .getProcBmp();
+            runOnUiThread(() -> {
+                final ObjectAnimator animator =
+                        ObjectAnimator.ofFloat(binding.loadingView, "alpha",
+                                1f, 0f);
+                animator.setDuration(500);
+                animator.start();
+                animator.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        binding.loadingView.setVisibility(View.GONE);
+                    }
+                });
+            });
 
-//            cornerPts = osCoreHED.getCornerPts();
+        }).start();
 
-//            osCoreHED.sweep();
-
-//            binding.cropImgView.setImageBitmap(procBmp);
-
-
-        });
     }
 
+    private void initListeners() {
+        binding.confirmTextViewBtn.setOnClickListener(view -> {
+            binding.cropImgView.setImageBitmap(osCoreHED
+                    .clipThenTransform(binding.cropImgView.getCornerPts())
+                    .getProcBmp()
+            );
+        });
+        binding.cancelTextViewBtn.setOnClickListener(view-> finish());
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        osCoreHED.sweep();
+        binding.cropImgView.setVisibility(View.INVISIBLE);
+        binding.cropImgView.setImageBitmap(null);
+
+    }
 }

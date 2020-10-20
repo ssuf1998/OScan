@@ -51,10 +51,10 @@ public class OSCoreHED {
     public OSCoreHED(@NonNull Context context,
                      @NonNull Mat resMat) throws IOException {
         this(context);
-        setResMat(resMat);
+        setRes(resMat);
     }
 
-    public OSCoreHED setResMat(@NonNull Mat resMat) {
+    public OSCoreHED setRes(@NonNull Mat resMat) {
         this.resMat = resMat;
         this.procMat = resMat.clone();
         Imgproc.cvtColor(resMat, resMat, Imgproc.COLOR_BGR2RGB);
@@ -65,12 +65,12 @@ public class OSCoreHED {
         return resMat;
     }
 
-    public OSCoreHED setResBmp(Bitmap bmp) {
-        return setResMat(Utils.bmp2Mat(bmp));
+    public OSCoreHED setRes(Bitmap bmp) {
+        return setRes(Utils.bmp2Mat(bmp));
     }
 
-    public OSCoreHED setResDrawable(Drawable drawable) {
-        return setResMat(Utils.drawable2Mat(drawable));
+    public OSCoreHED setRes(Drawable drawable) {
+        return setRes(Utils.drawable2Mat(drawable));
     }
 
     public Mat getProcMat() {
@@ -343,8 +343,8 @@ public class OSCoreHED {
         );
 
 
-        MatOfPoint2f cornerPtsMat = new MatOfPoint2f(cornerPts);
-        final Mat getMat = Imgproc.getPerspectiveTransform(cornerPtsMat, dst);
+        MatOfPoint2f clipPtsMat = new MatOfPoint2f(clipPts);
+        final Mat getMat = Imgproc.getPerspectiveTransform(clipPtsMat, dst);
 
         Imgproc.warpPerspective(resMat, procMat, getMat, new Size(maxWidth, maxHeight));
 

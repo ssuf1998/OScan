@@ -127,9 +127,8 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     private void giveBmp2Process(Bitmap bmp) {
-        final Intent intent = new Intent(this, ProcessActivity.class);
         block.putData("bmp", bmp);
-        this.startActivity(intent);
+        this.startActivity(new Intent(this, ProcessActivity.class));
         binding.takePicBtn.setClickable(true);
     }
 

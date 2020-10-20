@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CropImageView">
+        <attr name="strokeWidth" format="dimension|reference" />
+        <attr name="cornerPtsColor" format="color|reference" />
+        <attr name="cornerPtsRadius" format="dimension|reference" />
+        <attr name="edgeColor" format="color|reference" />
+        <attr name="maskAlpha" format="integer|reference" />
+
+    </declare-styleable>
+</resources>

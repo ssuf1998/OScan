@@ -3,7 +3,7 @@
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/colorPrimary</item>
     </style>
 
     <style name="MainActivity" parent="AppTheme">
@@ -16,7 +16,6 @@
     </style>
 
     <style name="ScanActivity" parent="AppTheme">
-        <item name="android:windowDrawsSystemBarBackgrounds">false</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 
