@@ -11,6 +11,7 @@ import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -24,22 +25,34 @@ import org.opencv.core.Point;
 import java.util.Arrays;
 
 public class CropImageView extends AppCompatImageView {
-    private Point[] cornerPts;
-
-    private int draggingPtIdx;
-    private final Point lastTimePt = new Point();
-    private Rect workRect;
-    private float scaleX, scaleY;
-
+    // 属性
     private int mStrokeWidth;
     private int cornerPtsColor;
     private int cornerPtsRadius;
     private int edgeColor;
     private int maskAlpha;
+    private int cropShadowRadius;
+    private int cropShadowColor;
+    private int magnifierRadius;
+    private float magnifierScale;
 
+    // 内部
+    private Point[] cornerPts;
+    private int draggingPtIdx = -1;
+    private final Point lastTimePt = new Point();
+    private Rect workRect;
+    private float scaleX, scaleY;
+    private Bitmap magnifierOrigBmp;
+    private Bitmap magnifierBmp;
+    private Canvas magnifierCanvas;
+
+    // 绘画相关
     private Paint cornerPtsPaint;
     private Paint edgesPaint;
     private Paint maskPaint;
+    private Paint magnifierPaint;
+    private Paint magnifierOutPaint;
+
 
     public CropImageView(@NonNull Context context) {
         this(context, null);
@@ -51,7 +64,6 @@ public class CropImageView extends AppCompatImageView {
 
     public CropImageView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-
         initAttrs(context, attrs);
 
         final int padding = cornerPtsRadius + (int) Math.ceil(mStrokeWidth / 2f);
@@ -82,22 +94,28 @@ public class CropImageView extends AppCompatImageView {
         cornerPtsPaint.setColor(cornerPtsColor);
         cornerPtsPaint.setStrokeWidth(mStrokeWidth);
         cornerPtsPaint.setStyle(Paint.Style.STROKE);
-        cornerPtsPaint.setShadowLayer(5f, 0, 0,
-                Color.parseColor("#80000000"));
+        cornerPtsPaint.setShadowLayer(cropShadowRadius, 0, 0, cropShadowColor);
 
         edgesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         edgesPaint.setColor(edgeColor);
         edgesPaint.setStrokeWidth(mStrokeWidth);
         edgesPaint.setStyle(Paint.Style.STROKE);
-        edgesPaint.setShadowLayer(5f, 0, 0,
-                Color.parseColor("#80000000"));
+        edgesPaint.setShadowLayer(cropShadowRadius, 0, 0, cropShadowColor);
 
         maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setColor(Color.BLACK);
         maskPaint.setStyle(Paint.Style.FILL);
+
+        magnifierPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        magnifierPaint.setStyle(Paint.Style.FILL);
+
+        magnifierOutPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        magnifierOutPaint.setColor(Color.TRANSPARENT);
+        magnifierOutPaint.setStyle(Paint.Style.FILL);
+        magnifierOutPaint.setShadowLayer(8f, 0, 0, Color.parseColor("#80000000"));
     }
 
-    private void initWorkRect() {
+    private void initOnce() {
         final Drawable d = getDrawable();
         if (workRect == null && d != null) {
             final float[] matrix = new float[9];
@@ -121,6 +139,15 @@ public class CropImageView extends AppCompatImageView {
                 p.x = (p.x * scaleX) + workRect.left;
                 p.y = (p.y * scaleY) + workRect.top;
             }
+
+            magnifierOrigBmp = ((BitmapDrawable) getDrawable()).getBitmap();
+            magnifierOrigBmp = Bitmap.createScaledBitmap(magnifierOrigBmp,
+                    (int) (scaleW * magnifierScale), (int) (scaleH * magnifierScale),
+                    false);
+
+            magnifierBmp = Bitmap.createBitmap(magnifierRadius, magnifierRadius, Bitmap.Config.ARGB_8888);
+            magnifierCanvas = new Canvas(magnifierBmp);
+
         }
     }
 
@@ -133,6 +160,12 @@ public class CropImageView extends AppCompatImageView {
         edgeColor = ta.getColor(R.styleable.CropImageView_edgeColor, Color.WHITE);
         maskAlpha = ta.getInteger(R.styleable.CropImageView_maskAlpha, 96);
         maskAlpha = Math.max(Math.min(maskAlpha, 255), 0);
+        cropShadowRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cropShadowRadius, 5);
+        cropShadowRadius = Math.min(20, cropShadowRadius);
+        cropShadowColor = ta.getColor(R.styleable.CropImageView_cropShadowColor,
+                Color.parseColor("#80000000"));
+        magnifierRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_magnifierRadius, 256);
+        magnifierScale = ta.getFloat(R.styleable.CropImageView_magnifierScale, 1.2f);
 
         ta.recycle();
     }
@@ -143,9 +176,15 @@ public class CropImageView extends AppCompatImageView {
         if (isCornerPtsInvalid())
             return;
 
-        initWorkRect();
+        initOnce();
 
         drawCropRect(canvas);
+
+        if (draggingPtIdx != -1) {
+            canvas.drawCircle(magnifierRadius / 2f + 4, magnifierRadius / 2f + 4,
+                    magnifierRadius / 2f, magnifierOutPaint);
+            canvas.drawBitmap(magnifierBmp, 4, 4, null);
+        }
     }
 
     private void drawCornerPts(Canvas canvas) {
@@ -181,6 +220,7 @@ public class CropImageView extends AppCompatImageView {
         maskPaint.setXfermode(null);
 
         canvas.restoreToCount(layerId);
+
     }
 
     @Override
@@ -198,6 +238,9 @@ public class CropImageView extends AppCompatImageView {
             final float[] canMoveXY = getMoveValue(event.getX(), event.getY());
             cornerPts[draggingPtIdx].x = canMoveXY[0];
             cornerPts[draggingPtIdx].y = canMoveXY[1];
+
+            drawMagnifier();
+
         } else if (action == MotionEvent.ACTION_UP) {
             if (!isConvex()) {
                 cornerPts[draggingPtIdx].x = lastTimePt.x;
@@ -205,6 +248,8 @@ public class CropImageView extends AppCompatImageView {
                 lastTimePt.x = 0;
                 lastTimePt.y = 0;
             }
+            draggingPtIdx = -1;
+            magnifierCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
             performClick();
         }
         invalidate();
@@ -220,6 +265,40 @@ public class CropImageView extends AppCompatImageView {
         return super.performClick();
     }
 
+    private void drawMagnifier() {
+        final int magnifierX = (int) ((cornerPts[draggingPtIdx].x - workRect.left) * magnifierScale);
+        final int magnifierY = (int) ((cornerPts[draggingPtIdx].y - workRect.top) * magnifierScale);
+
+        magnifierPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
+        magnifierPaint.setColor(Color.BLACK);
+        magnifierPaint.setStrokeWidth(0);
+        magnifierCanvas.drawCircle(magnifierRadius / 2f, magnifierRadius / 2f,
+                magnifierRadius / 2f, magnifierPaint);
+
+        magnifierPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+
+        magnifierCanvas.drawBitmap(magnifierOrigBmp,
+                new Rect(
+                        magnifierX - magnifierRadius / 2,
+                        magnifierY - magnifierRadius / 2,
+                        magnifierX + magnifierRadius / 2,
+                        magnifierY + magnifierRadius / 2
+                ),
+                new Rect(0, 0, magnifierRadius, magnifierRadius), magnifierPaint);
+
+        magnifierPaint.setColor(cornerPtsColor);
+        magnifierPaint.setStrokeWidth(8);
+        magnifierCanvas.drawLine(magnifierRadius / 2f - 24,
+                magnifierRadius / 2f,
+                magnifierRadius / 2f + 24,
+                magnifierRadius / 2f,
+                magnifierPaint);
+        magnifierCanvas.drawLine(magnifierRadius / 2f,
+                magnifierRadius / 2f - 24,
+                magnifierRadius / 2f,
+                magnifierRadius / 2f + 24,
+                magnifierPaint);
+    }
 
     @Override
     public void setImageBitmap(Bitmap bm) {

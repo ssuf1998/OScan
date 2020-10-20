@@ -45,6 +45,18 @@ public class ProcessActivity extends AppCompatActivity {
     }
 
     private void initUI() {
+//        binding.loadingView.setVisibility(View.GONE);
+//
+//        cornerPts = new Point[]{
+//                new Point(32,32),
+//                new Point(128,32),
+//                new Point(128,128),
+//                new Point(32,128),
+//
+//        };
+//        binding.cropImgView.setCornerPts(cornerPts);
+
+
         binding.cropImgView.setVisibility(View.VISIBLE);
 
         resBmp = (Bitmap) mBlock.getDataThenSweep("bmp");
@@ -61,7 +73,7 @@ public class ProcessActivity extends AppCompatActivity {
                 final ObjectAnimator animator =
                         ObjectAnimator.ofFloat(binding.loadingView, "alpha",
                                 1f, 0f);
-                animator.setDuration(500);
+                animator.setDuration(750);
                 animator.start();
                 animator.addListener(new AnimatorListenerAdapter() {
                     @Override
@@ -82,16 +94,15 @@ public class ProcessActivity extends AppCompatActivity {
                     .getProcBmp()
             );
         });
-        binding.cancelTextViewBtn.setOnClickListener(view-> finish());
+        binding.cancelTextViewBtn.setOnClickListener(view -> onBackPressed());
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    public void onBackPressed() {
+        super.onBackPressed();
 
         osCoreHED.sweep();
         binding.cropImgView.setVisibility(View.INVISIBLE);
         binding.cropImgView.setImageBitmap(null);
-
     }
 }

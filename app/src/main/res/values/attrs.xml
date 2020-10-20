@@ -6,6 +6,10 @@
         <attr name="cornerPtsRadius" format="dimension|reference" />
         <attr name="edgeColor" format="color|reference" />
         <attr name="maskAlpha" format="integer|reference" />
+        <attr name="cropShadowRadius" format="dimension|reference" />
+        <attr name="cropShadowColor" format="color|reference" />
+        <attr name="magnifierRadius" format="dimension|reference" />
+        <attr name="magnifierScale" format="float|reference" />
 
     </declare-styleable>
 </resources>

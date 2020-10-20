@@ -15,6 +15,7 @@
         android:contentDescription="@string/crop_img_desc"
         android:scaleType="fitCenter"
         android:src="@drawable/big_ico"
+
         app:cornerPtsColor="@color/colorPrimary"
         app:edgeColor="@color/colorPrimary"
         app:layout_constraintBottom_toTopOf="@+id/cancelTextViewBtn"
