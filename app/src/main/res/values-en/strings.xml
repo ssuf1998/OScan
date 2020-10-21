@@ -22,4 +22,5 @@
     <string name="dialog_confirm">OK</string>
     <string name="err_dialog_title">Error</string>
     <string name="err_dialog_msg_pre">App will exit soon, and here is error message:</string>
+    <string name="bad_pts_tip">No suitable document boundaries are detected, please adjust manually.</string>
 </resources>

@@ -1,4 +1,4 @@
-package indi.ssuf1998.oscan;
+package indi.ssuf1998.cropimageview;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -22,6 +22,7 @@ import androidx.appcompat.widget.AppCompatImageView;
 
 import org.opencv.core.Point;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class CropImageView extends AppCompatImageView {
@@ -35,6 +36,12 @@ public class CropImageView extends AppCompatImageView {
     private int cropShadowColor;
     private int magnifierRadius;
     private float magnifierScale;
+    private int magnifierPosition;
+    private int magnifierCrossWidth;
+    private int magnifierCrossSize;
+    private int magnifierCrossColor;
+    private int magnifierShadowRadius;
+    private int magnifierShadowColor;
 
     // 内部
     private Point[] cornerPts;
@@ -45,6 +52,7 @@ public class CropImageView extends AppCompatImageView {
     private Bitmap magnifierOrigBmp;
     private Bitmap magnifierBmp;
     private Canvas magnifierCanvas;
+    private int magnifierCenter;
 
     // 绘画相关
     private Paint cornerPtsPaint;
@@ -53,6 +61,8 @@ public class CropImageView extends AppCompatImageView {
     private Paint magnifierPaint;
     private Paint magnifierOutPaint;
 
+    // 事件
+    private final ArrayList<BadCornerPtsListener> mBadCornerPtsListeners = new ArrayList<>();
 
     public CropImageView(@NonNull Context context) {
         this(context, null);
@@ -112,7 +122,7 @@ public class CropImageView extends AppCompatImageView {
         magnifierOutPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         magnifierOutPaint.setColor(Color.TRANSPARENT);
         magnifierOutPaint.setStyle(Paint.Style.FILL);
-        magnifierOutPaint.setShadowLayer(8f, 0, 0, Color.parseColor("#80000000"));
+        magnifierOutPaint.setShadowLayer(magnifierShadowRadius, 0, 0, magnifierShadowColor);
     }
 
     private void initOnce() {
@@ -135,6 +145,19 @@ public class CropImageView extends AppCompatImageView {
                     (getHeight() + scaleH) / 2
             );
 
+            if (cornerPtsAnyNull() || notConvex()) {
+                cornerPts = new Point[]{
+                        new Point(origW / 4f, origH / 4f),
+                        new Point(origW / 4f, origH / 4f * 3),
+                        new Point(origW / 4f * 3, origH / 4f * 3),
+                        new Point(origW / 4f * 3, origH / 4f),
+                };
+                for (BadCornerPtsListener listener : mBadCornerPtsListeners) {
+                    listener.haveBadCornerPts();
+                }
+            }
+
+
             for (Point p : cornerPts) {
                 p.x = (p.x * scaleX) + workRect.left;
                 p.y = (p.y * scaleY) + workRect.top;
@@ -154,18 +177,33 @@ public class CropImageView extends AppCompatImageView {
     private void initAttrs(Context context, AttributeSet attrs) {
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.CropImageView);
 
-        mStrokeWidth = ta.getDimensionPixelSize(R.styleable.CropImageView_strokeWidth, 8);
-        cornerPtsColor = ta.getColor(R.styleable.CropImageView_cornerPtsColor, Color.WHITE);
-        cornerPtsRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cornerPtsRadius, 36);
-        edgeColor = ta.getColor(R.styleable.CropImageView_edgeColor, Color.WHITE);
-        maskAlpha = ta.getInteger(R.styleable.CropImageView_maskAlpha, 96);
+        mStrokeWidth = ta.getDimensionPixelSize(R.styleable.CropImageView_strokeWidth,
+                Const.D_STROKE_WIDTH);
+        cornerPtsColor = ta.getColor(R.styleable.CropImageView_cornerPtsColor, Const.D_CORNER_PTS_COLOR);
+        cornerPtsRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cornerPtsRadius,
+                Const.D_CORNER_PTS_RADIUS);
+        edgeColor = ta.getColor(R.styleable.CropImageView_edgeColor, Const.D_EDGE_COLOR);
+        maskAlpha = ta.getInteger(R.styleable.CropImageView_maskAlpha, Const.D_MASK_ALPHA);
         maskAlpha = Math.max(Math.min(maskAlpha, 255), 0);
-        cropShadowRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cropShadowRadius, 5);
+        cropShadowRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_cropShadowRadius,
+                Const.D_CROP_SHADOW_RADIUS);
         cropShadowRadius = Math.min(20, cropShadowRadius);
         cropShadowColor = ta.getColor(R.styleable.CropImageView_cropShadowColor,
-                Color.parseColor("#80000000"));
-        magnifierRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_magnifierRadius, 256);
-        magnifierScale = ta.getFloat(R.styleable.CropImageView_magnifierScale, 1.2f);
+                Const.D_CROP_SHADOW_COLOR);
+        magnifierRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_magnifierRadius,
+                Const.D_MAGNIFIER_RADIUS);
+        magnifierScale = ta.getFloat(R.styleable.CropImageView_magnifierScale, Const.D_MAGNIFIER_SCALE);
+        magnifierPosition = ta.getInteger(R.styleable.CropImageView_magnifierPosition, Const.D_MAGNIFIER_POSITION);
+        magnifierCrossWidth = ta.getInteger(R.styleable.CropImageView_magnifierCrossWidth, Const.D_MAGNIFIER_CROSS_WIDTH);
+        magnifierCrossSize = ta.getInteger(R.styleable.CropImageView_magnifierCrossSize, Const.D_MAGNIFIER_CROSS_SIZE);
+        magnifierCrossColor = ta.getColor(R.styleable.CropImageView_magnifierCrossColor, Const.D_MAGNIFIER_CROSS_COLOR);
+        magnifierShadowRadius = ta.getDimensionPixelSize(R.styleable.CropImageView_magnifierShadowRadius,
+                Const.D_MAGNIFIER_SHADOW_RADIUS);
+        magnifierShadowRadius = Math.min(10, magnifierShadowRadius);
+        magnifierShadowColor = ta.getColor(R.styleable.CropImageView_magnifierShadowColor,
+                Const.D_MAGNIFIER_SHADOW_COLOR);
+
+        magnifierCenter = magnifierRadius / 2;
 
         ta.recycle();
     }
@@ -179,12 +217,7 @@ public class CropImageView extends AppCompatImageView {
         initOnce();
 
         drawCropRect(canvas);
-
-        if (draggingPtIdx != -1) {
-            canvas.drawCircle(magnifierRadius / 2f + 4, magnifierRadius / 2f + 4,
-                    magnifierRadius / 2f, magnifierOutPaint);
-            canvas.drawBitmap(magnifierBmp, 4, 4, null);
-        }
+        drawMagnifier(canvas);
     }
 
     private void drawCornerPts(Canvas canvas) {
@@ -220,7 +253,6 @@ public class CropImageView extends AppCompatImageView {
         maskPaint.setXfermode(null);
 
         canvas.restoreToCount(layerId);
-
     }
 
     @Override
@@ -239,10 +271,10 @@ public class CropImageView extends AppCompatImageView {
             cornerPts[draggingPtIdx].x = canMoveXY[0];
             cornerPts[draggingPtIdx].y = canMoveXY[1];
 
-            drawMagnifier();
+            drawMagnifierContent();
 
         } else if (action == MotionEvent.ACTION_UP) {
-            if (!isConvex()) {
+            if (notConvex()) {
                 cornerPts[draggingPtIdx].x = lastTimePt.x;
                 cornerPts[draggingPtIdx].y = lastTimePt.y;
                 lastTimePt.x = 0;
@@ -265,38 +297,66 @@ public class CropImageView extends AppCompatImageView {
         return super.performClick();
     }
 
-    private void drawMagnifier() {
+    private void drawMagnifier(Canvas canvas) {
+        if (draggingPtIdx == -1)
+            return;
+
+        final int shadowOffset = magnifierShadowRadius / 2;
+        int displayX = magnifierCenter + shadowOffset;
+        int displayY = magnifierCenter + shadowOffset;
+
+        if (magnifierPosition == Const.MAGNIFIER_CENTER_TOP) {
+            displayX = getWidth() / 2;
+        } else if (magnifierPosition == Const.MAGNIFIER_RIGHT_TOP) {
+            displayX = getWidth() - magnifierCenter - shadowOffset;
+        } else if (magnifierPosition == Const.MAGNIFIER_CENTER) {
+            displayX = getWidth() / 2;
+            displayY = getHeight() / 2;
+        }
+
+        canvas.drawCircle(displayX,
+                displayY,
+                magnifierCenter,
+                magnifierOutPaint);
+        canvas.drawBitmap(magnifierBmp,
+                displayX - magnifierCenter, displayY - magnifierCenter,
+                null);
+    }
+
+    private void drawMagnifierContent() {
         final int magnifierX = (int) ((cornerPts[draggingPtIdx].x - workRect.left) * magnifierScale);
         final int magnifierY = (int) ((cornerPts[draggingPtIdx].y - workRect.top) * magnifierScale);
+        final int magnifierCrossOffset = magnifierCrossSize / 2;
 
         magnifierPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC));
         magnifierPaint.setColor(Color.BLACK);
         magnifierPaint.setStrokeWidth(0);
-        magnifierCanvas.drawCircle(magnifierRadius / 2f, magnifierRadius / 2f,
-                magnifierRadius / 2f, magnifierPaint);
+        magnifierCanvas.drawCircle(magnifierCenter, magnifierCenter,
+                magnifierCenter, magnifierPaint);
 
         magnifierPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
 
         magnifierCanvas.drawBitmap(magnifierOrigBmp,
                 new Rect(
-                        magnifierX - magnifierRadius / 2,
-                        magnifierY - magnifierRadius / 2,
-                        magnifierX + magnifierRadius / 2,
-                        magnifierY + magnifierRadius / 2
+                        magnifierX - magnifierCenter,
+                        magnifierY - magnifierCenter,
+                        magnifierX + magnifierCenter,
+                        magnifierY + magnifierCenter
                 ),
                 new Rect(0, 0, magnifierRadius, magnifierRadius), magnifierPaint);
 
-        magnifierPaint.setColor(cornerPtsColor);
-        magnifierPaint.setStrokeWidth(8);
-        magnifierCanvas.drawLine(magnifierRadius / 2f - 24,
-                magnifierRadius / 2f,
-                magnifierRadius / 2f + 24,
-                magnifierRadius / 2f,
+        magnifierPaint.setXfermode(null);
+        magnifierPaint.setColor(magnifierCrossColor);
+        magnifierPaint.setStrokeWidth(magnifierCrossWidth);
+        magnifierCanvas.drawLine(magnifierCenter - magnifierCrossOffset,
+                magnifierCenter,
+                magnifierCenter + magnifierCrossOffset,
+                magnifierCenter,
                 magnifierPaint);
-        magnifierCanvas.drawLine(magnifierRadius / 2f,
-                magnifierRadius / 2f - 24,
-                magnifierRadius / 2f,
-                magnifierRadius / 2f + 24,
+        magnifierCanvas.drawLine(magnifierCenter,
+                magnifierCenter - magnifierCrossOffset,
+                magnifierCenter,
+                magnifierCenter + magnifierCrossOffset,
                 magnifierPaint);
     }
 
@@ -307,16 +367,27 @@ public class CropImageView extends AppCompatImageView {
     }
 
     private boolean isCornerPtsInvalid() {
-        return cornerPts == null ||
-                cornerPts.length != 4;
+        return cornerPts == null || cornerPts.length != 4;
+    }
+
+    private boolean cornerPtsAnyNull() {
+        boolean anyNull = false;
+        for (Point p : cornerPts) {
+            if (p == null) {
+                anyNull = true;
+                break;
+            }
+        }
+
+        return anyNull;
     }
 
     // https://github.com/pqpo/SmartCropper/blob/master/smartcropperlib/src/main/java/me/pqpo/smartcropperlib/view/CropImageView.java#L348
-    private boolean isConvex() {
-        return (pointSideLine(cornerPts[0], cornerPts[2], cornerPts[3]) *
-                pointSideLine(cornerPts[0], cornerPts[2], cornerPts[1]) < 0 &&
-                pointSideLine(cornerPts[3], cornerPts[1], cornerPts[0]) *
-                        pointSideLine(cornerPts[3], cornerPts[1], cornerPts[2]) < 0);
+    private boolean notConvex() {
+        return (!(pointSideLine(cornerPts[0], cornerPts[2], cornerPts[3]) *
+                pointSideLine(cornerPts[0], cornerPts[2], cornerPts[1]) < 0) ||
+                !(pointSideLine(cornerPts[3], cornerPts[1], cornerPts[0]) *
+                        pointSideLine(cornerPts[3], cornerPts[1], cornerPts[2]) < 0));
     }
 
     // https://github.com/pqpo/SmartCropper/blob/master/smartcropperlib/src/main/java/me/pqpo/smartcropperlib/view/CropImageView.java#L368
@@ -326,10 +397,6 @@ public class CropImageView extends AppCompatImageView {
     }
 
     private int getTouchedPtIdx(MotionEvent event) {
-        if (isCornerPtsInvalid()) {
-            return -1;
-        }
-
         final float x = event.getX();
         final float y = event.getY();
 
@@ -367,5 +434,12 @@ public class CropImageView extends AppCompatImageView {
         };
     }
 
+    public void addBadCornerPtsListener(BadCornerPtsListener listener) {
+        mBadCornerPtsListeners.add(listener);
+    }
+
+    public interface BadCornerPtsListener {
+        void haveBadCornerPts();
+    }
 
 }

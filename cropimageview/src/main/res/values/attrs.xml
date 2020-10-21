@@ -10,6 +10,18 @@
         <attr name="cropShadowColor" format="color|reference" />
         <attr name="magnifierRadius" format="dimension|reference" />
         <attr name="magnifierScale" format="float|reference" />
+        <attr name="magnifierPosition" format="integer|reference" />
+        <attr name="magnifierCrossWidth" format="integer|reference" />
+        <attr name="magnifierCrossSize" format="integer|reference" />
+        <attr name="magnifierCrossColor" format="color|reference" />
+        <attr name="magnifierShadowRadius" format="dimension|reference" />
+        <attr name="magnifierShadowColor" format="color|reference" />
 
     </declare-styleable>
+
+    <integer name="magnifier_left_top">0</integer>
+    <integer name="magnifier_center_top">1</integer>
+    <integer name="magnifier_right_top">2</integer>
+    <integer name="magnifier_center">3</integer>
+
 </resources>

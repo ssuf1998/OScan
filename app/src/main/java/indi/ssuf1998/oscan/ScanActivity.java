@@ -20,9 +20,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.FocusMeteringAction;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageProxy;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
@@ -32,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import es.dmoral.toasty.Toasty;
 import indi.ssuf1998.osactionsheet.OSMASItem;
@@ -46,7 +51,7 @@ public class ScanActivity extends AppCompatActivity {
     private CameraSelector cameraSelector;
     private ImageCapture capture;
     private Preview preview;
-//    private Camera camera;
+    private Camera camera;
 
     private final SharedBlock block = SharedBlock.getInstance();
     private OSMenuActionSheet grantedMenuAS;
@@ -174,6 +179,8 @@ public class ScanActivity extends AppCompatActivity {
                     }
             );
         });
+
+        binding.previewView.setOnClickListener(view -> setFocus(view.getX(), view.getY()));
     }
 
     private void bindToCamera(@NonNull ProcessCameraProvider cameraProvider) {
@@ -218,9 +225,20 @@ public class ScanActivity extends AppCompatActivity {
 
         preview.setSurfaceProvider(binding.previewView.getSurfaceProvider());
 
-//        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
-        cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+        camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+    }
 
+    public void setFocus(float x, float y) {
+        final MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
+                binding.previewView.getWidth(), binding.previewView.getHeight());
+        final MeteringPoint point = factory.createPoint(x, y);
+
+        camera.getCameraControl().startFocusAndMetering(
+                new FocusMeteringAction
+                        .Builder(point, FocusMeteringAction.FLAG_AF)
+                        .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                        .build()
+        );
     }
 
     @Override

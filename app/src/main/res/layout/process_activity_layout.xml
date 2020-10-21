@@ -7,26 +7,25 @@
     android:background="@android:color/black"
     tools:context=".ProcessActivity">
 
-    <indi.ssuf1998.oscan.CropImageView
+    <indi.ssuf1998.cropimageview.CropImageView
         android:id="@+id/cropImgView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@android:color/black"
         android:contentDescription="@string/crop_img_desc"
         android:scaleType="fitCenter"
-        android:src="@drawable/big_ico"
-
         app:cornerPtsColor="@color/colorPrimary"
         app:edgeColor="@color/colorPrimary"
         app:layout_constraintBottom_toTopOf="@+id/cancelTextViewBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_percent="0.8"
         app:layout_constraintStart_toStartOf="parent"
-
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.8">
+        app:layout_constraintWidth_percent="0.8"
+        app:magnifierCrossColor="@color/colorPrimary"
+        app:magnifierPosition="@integer/magnifier_center">
 
-    </indi.ssuf1998.oscan.CropImageView>
+    </indi.ssuf1998.cropimageview.CropImageView>
 
     <TextView
         android:id="@+id/cancelTextViewBtn"

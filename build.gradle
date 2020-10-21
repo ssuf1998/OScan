@@ -3,10 +3,10 @@ buildscript {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url "https://maven.aliyun.com/repository/google" }
-        maven { url "https://maven.aliyun.com/repository/public" }
+//        maven { url "https://maven.aliyun.com/repository/google" }
+//        maven { url "https://maven.aliyun.com/repository/public" }
         maven { url "https://jitpack.io" }
-//        google()
+        google()
         jcenter()
     }
     dependencies {
@@ -20,10 +20,10 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url "https://maven.aliyun.com/repository/google" }
-        maven { url "https://maven.aliyun.com/repository/public" }
+//        maven { url "https://maven.aliyun.com/repository/google" }
+//        maven { url "https://maven.aliyun.com/repository/public" }
         maven { url "https://jitpack.io" }
-//        google()
+        google()
         jcenter()
     }
 }
