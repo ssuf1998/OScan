@@ -1,17 +1,30 @@
 package indi.ssuf1998.oscan;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -67,6 +80,15 @@ public class ScanActivity extends AppCompatActivity {
     }};
     private int flashNowMode = ImageCapture.FLASH_MODE_AUTO;
 
+    private final ValueAnimator focusAnim = ValueAnimator.ofFloat(0, 1);
+
+    private final Canvas pvaCanvas = new Canvas();
+    private final Paint pvaPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Bitmap pvaBmp;
+    private int touchX;
+    private int touchY;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +99,7 @@ public class ScanActivity extends AppCompatActivity {
 
         binding.getRoot().post(() -> {
             initUI();
+            initAnim();
             bindListeners();
         });
     }
@@ -100,6 +123,41 @@ public class ScanActivity extends AppCompatActivity {
         grantedMenuAS = new OSMenuActionSheet(getString(R.string.granted_action_sheet_title), items);
         grantedMenuAS.setCancelable(false);
         grantedMenuAS.setDecoration(new RecycleViewDivider(this));
+
+
+    }
+
+    private void initAnim() {
+        pvaBmp = Bitmap.createBitmap(
+                binding.previewView.getWidth(),
+                binding.previewView.getHeight(),
+                Bitmap.Config.ARGB_8888);
+        pvaCanvas.setBitmap(pvaBmp);
+        pvaPaint.setColor(Color.WHITE);
+
+        focusAnim.setDuration(500);
+        focusAnim.addUpdateListener(valueAnimator -> {
+
+            final float scale = 1.2f - (float) valueAnimator.getAnimatedValue() * 0.2f;
+            final int alpha = (int) (192 * (float) valueAnimator.getAnimatedValue());
+
+            pvaCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+
+            pvaCanvas.drawCircle(touchX, touchY,
+                    128 * scale, pvaPaint);
+            pvaPaint.setAlpha(alpha);
+
+            binding.pvAnimView.setImageBitmap(pvaBmp);
+        });
+
+        focusAnim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                new Handler().postDelayed(() -> binding.pvAnimView.setImageBitmap(null),
+                        1000);
+            }
+        });
+
     }
 
     private void bindListeners() {
@@ -137,6 +195,7 @@ public class ScanActivity extends AppCompatActivity {
         binding.takePicBtn.setClickable(true);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private void bindCameraListeners() {
         // 摄像头绑定监听
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
@@ -180,7 +239,20 @@ public class ScanActivity extends AppCompatActivity {
             );
         });
 
-        binding.previewView.setOnClickListener(view -> setFocus(view.getX(), view.getY()));
+        // 安卓的设计者真是有病
+        binding.previewView.setOnTouchListener((view, motionEvent) -> {
+
+            if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                setFocus(motionEvent.getX(), motionEvent.getY());
+                touchX = (int) motionEvent.getX();
+                touchY = (int) motionEvent.getY();
+
+                focusAnim.start();
+            }
+
+            // 分发事件
+            return true;
+        });
     }
 
     private void bindToCamera(@NonNull ProcessCameraProvider cameraProvider) {

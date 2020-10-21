@@ -9,7 +9,8 @@
     <string name="scan_action_sheet_code">Bar Code</string>
     <string name="scan_action_sheet_title">WHAT TO BE SCANNED?</string>
     <string name="take_pic_btn_desc">Capture</string>
-    <string name="pick_pic_btn_desc">Pick a pic from gallary</string>
+    <string name="pick_pic_btn_desc">Pick a pic from gallery</string>
+    <string name="switch_flash_btn_desc">Switch flash mode</string>
     <string name="back_btn_desc">Back</string>
     <string name="pick_pic_intent_title">Pick a pic</string>
     <string name="crop_img_desc">Crop area</string>
