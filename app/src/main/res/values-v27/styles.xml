@@ -14,7 +14,7 @@
         <item name="android:navigationBarColor">@color/btmNavBg</item>
     </style>
 
-    <style name="SplashActivity" parent="MainActivity">
+    <style name="SplashActivity" parent="AppTheme">
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 

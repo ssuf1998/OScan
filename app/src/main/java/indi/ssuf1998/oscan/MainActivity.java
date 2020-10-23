@@ -14,6 +14,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.ArrayList;
 
@@ -33,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
         binding = MainActivityLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE);
 
         binding.getRoot().post(() -> {
             initUI();

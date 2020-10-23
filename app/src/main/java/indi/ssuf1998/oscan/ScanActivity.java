@@ -3,28 +3,33 @@ package indi.ssuf1998.oscan;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -41,7 +46,6 @@ import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.Preview;
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
 import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -49,6 +53,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import es.dmoral.toasty.Toasty;
@@ -65,8 +70,9 @@ public class ScanActivity extends AppCompatActivity {
     private ImageCapture capture;
     private Preview preview;
     private Camera camera;
+    private Size captureMaxSize;
 
-    private final SharedBlock block = SharedBlock.getInstance();
+    private final SharedBlock mBlock = SharedBlock.getInstance();
     private OSMenuActionSheet grantedMenuAS;
     private int tryTimes = 0;
 
@@ -88,6 +94,9 @@ public class ScanActivity extends AppCompatActivity {
     private int touchX;
     private int touchY;
 
+//    float[] accValues; // 1*3
+//    float[] magValues; // 1*3
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +105,8 @@ public class ScanActivity extends AppCompatActivity {
         binding = ScanActivityLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         usesPermissions();
+
+        requireCaptureMaxSize();
 
         binding.getRoot().post(() -> {
             initUI();
@@ -124,7 +135,9 @@ public class ScanActivity extends AppCompatActivity {
         grantedMenuAS.setCancelable(false);
         grantedMenuAS.setDecoration(new RecycleViewDivider(this));
 
-
+        final Toast planeToast = Toasty.info(this, getString(R.string.plane_tip), Toast.LENGTH_SHORT);
+        planeToast.setGravity(Gravity.CENTER, 0, 0);
+        planeToast.show();
     }
 
     private void initAnim() {
@@ -172,6 +185,35 @@ public class ScanActivity extends AppCompatActivity {
         });
     }
 
+//    突然发现实现这个不能说是强制要求用户水平放置手机，需要的是手机和文档平行，这是无法做到的……
+//    private void bindSensor() {
+//        SensorManager sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
+//        final Sensor magSensor = sensorMgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+//        final Sensor accSensor = sensorMgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//
+//        final SensorEventCallback callback = new SensorEventCallback() {
+//            @Override
+//            public void onSensorChanged(SensorEvent event) {
+//                if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+//                    magValues = event.values;
+//                else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+//                    accValues = event.values;
+//
+//                final float[] values = new float[3];
+//                final float[] R = new float[9];
+//                SensorManager.getRotationMatrix(R, null, accValues, magValues);
+//                SensorManager.getOrientation(R, values);
+//
+//                final float pitch = (float) Math.toDegrees(values[1]); // 俯仰角
+//                final float roll = (float) Math.toDegrees(values[2]); // 翻滚角
+//
+//            }
+//        };
+//
+//        sensorMgr.registerListener(callback, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//        sensorMgr.registerListener(callback, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+//    }
+
     private void usesPermissions() {
         ActivityCompat.requestPermissions(this,
                 new String[]{Manifest.permission.CAMERA},
@@ -189,9 +231,9 @@ public class ScanActivity extends AppCompatActivity {
                 Const.PICK_IMG_REQUEST);
     }
 
-    private void giveBmp2Process(Bitmap bmp) {
-        block.putData("bmp", bmp);
-        this.startActivity(new Intent(this, ProcessActivity.class));
+    private void giveBmp2Crop(Bitmap bmp) {
+        mBlock.putData("scan_bmp", bmp);
+        this.startActivity(new Intent(this, CropActivity.class));
         binding.takePicBtn.setClickable(true);
     }
 
@@ -232,7 +274,7 @@ public class ScanActivity extends AppCompatActivity {
                     new ImageCapture.OnImageCapturedCallback() {
                         @Override
                         public void onCaptureSuccess(@NonNull ImageProxy image) {
-                            giveBmp2Process(Utils.imgProxy2Bitmap(image));
+                            giveBmp2Crop(Utils.imgProxy2Bitmap(image));
                             image.close();
                         }
                     }
@@ -261,31 +303,23 @@ public class ScanActivity extends AppCompatActivity {
                 .build();
 
         capture = new ImageCapture.Builder()
+                .setTargetResolution(new Size(captureMaxSize.getHeight(), captureMaxSize.getWidth()))
                 .build();
 
         final OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
             @Override
             public void onOrientationChanged(int orientation) {
                 final int cameraRotation;
-                final float btnRotation;
-
                 if (orientation >= 45 && orientation < 135) {
                     cameraRotation = Surface.ROTATION_270;
-                    btnRotation = 270;
                 } else if (orientation >= 135 && orientation < 225) {
                     cameraRotation = Surface.ROTATION_180;
-                    btnRotation = 180;
                 } else if (orientation >= 225 && orientation < 315) {
                     cameraRotation = Surface.ROTATION_90;
-                    btnRotation = 90;
                 } else {
                     cameraRotation = Surface.ROTATION_0;
-                    btnRotation = 0;
                 }
-
                 capture.setTargetRotation(cameraRotation);
-                binding.pickPicBtn.setRotation(btnRotation);
-                binding.switchFlashBtn.setRotation(btnRotation);
             }
         };
 
@@ -298,9 +332,10 @@ public class ScanActivity extends AppCompatActivity {
         preview.setSurfaceProvider(binding.previewView.getSurfaceProvider());
 
         camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, capture);
+
     }
 
-    public void setFocus(float x, float y) {
+    private void setFocus(float x, float y) {
         final MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
                 binding.previewView.getWidth(), binding.previewView.getHeight());
         final MeteringPoint point = factory.createPoint(x, y);
@@ -311,6 +346,38 @@ public class ScanActivity extends AppCompatActivity {
                         .setAutoCancelDuration(3, TimeUnit.SECONDS)
                         .build()
         );
+    }
+
+    private void requireCaptureMaxSize() {
+        final SharedPreferences preferences = getSharedPreferences(getString(R.string.app_name), MODE_PRIVATE);
+        final String sizeStr = preferences.getString(Const.CAPTURE_MAX_SIZE, null);
+
+        if (sizeStr == null) {
+            final SharedPreferences.Editor editor = preferences.edit();
+            try {
+                final CameraManager mgr = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                final CameraCharacteristics c = mgr.getCameraCharacteristics(String.valueOf(CameraSelector.LENS_FACING_BACK));
+                final StreamConfigurationMap map = c.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                final Size[] sizes = map.getOutputSizes(ImageFormat.JPEG);
+
+                Arrays.sort(sizes, (s1, s2) -> s2.getWidth() * s2.getHeight() - s1.getWidth() * s1.getHeight());
+
+                for (Size s : sizes) {
+                    if ((double) s.getHeight() / s.getWidth() == 0.75) {
+                        captureMaxSize = s;
+                        editor.putString(Const.CAPTURE_MAX_SIZE, String.format("%s,%s", s.getWidth(), s.getHeight()));
+                        editor.apply();
+                        break;
+                    }
+                }
+
+            } catch (CameraAccessException ignore) {
+            }
+        } else {
+            String[] tmp = sizeStr.split(",");
+            captureMaxSize = new Size(Integer.parseInt(tmp[0]),
+                    Integer.parseInt(tmp[1]));
+        }
     }
 
     @Override
@@ -326,7 +393,7 @@ public class ScanActivity extends AppCompatActivity {
                 if (tryTimes > 1) {
                     final Toast grantToast = Toasty.error(
                             this,
-                            this.getString(R.string.granted_fail_toast),
+                            getString(R.string.granted_fail_toast),
                             Toast.LENGTH_SHORT
                     );
 
@@ -355,7 +422,7 @@ public class ScanActivity extends AppCompatActivity {
                     assert uri != null;
                     final Bitmap bmp = BitmapFactory.decodeStream(
                             this.getContentResolver().openInputStream(uri));
-                    giveBmp2Process(bmp);
+                    giveBmp2Crop(bmp);
                 } catch (FileNotFoundException e) {
                     Toasty.error(ScanActivity.this,
                             getString(R.string.err_file_not_find),

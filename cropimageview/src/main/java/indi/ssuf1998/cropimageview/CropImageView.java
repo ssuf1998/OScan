@@ -23,7 +23,6 @@ import androidx.appcompat.widget.AppCompatImageView;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class CropImageView extends AppCompatImageView {
     // 属性
@@ -62,7 +61,7 @@ public class CropImageView extends AppCompatImageView {
     private Paint magnifierOutPaint;
 
     // 事件
-    private final ArrayList<BadCornerPtsListener> mBadCornerPtsListeners = new ArrayList<>();
+    private BadCornerPtsListener mBadCornerPtsListener;
 
     public CropImageView(@NonNull Context context) {
         this(context, null);
@@ -91,10 +90,10 @@ public class CropImageView extends AppCompatImageView {
     }
 
     public Point[] getCornerPts() {
-        final Point[] ret = Arrays.copyOf(cornerPts, cornerPts.length);
-        for (Point p : ret) {
-            p.x = (p.x - workRect.left) / scaleX;
-            p.y = (p.y - workRect.top) / scaleY;
+        final Point[] ret = new Point[cornerPts.length];
+        for (int i = 0; i < cornerPts.length; i++) {
+            ret[i] = new Point((cornerPts[i].x - workRect.left) / scaleX,
+                    (cornerPts[i].y - workRect.top) / scaleY);
         }
         return ret;
     }
@@ -125,13 +124,14 @@ public class CropImageView extends AppCompatImageView {
         magnifierOutPaint.setShadowLayer(magnifierShadowRadius, 0, 0, magnifierShadowColor);
     }
 
-    private void initOnce() {
+    private void initWorkRect() {
         final Drawable d = getDrawable();
         if (workRect == null && d != null) {
             final float[] matrix = new float[9];
             getImageMatrix().getValues(matrix);
             scaleX = matrix[Matrix.MSCALE_X];
             scaleY = matrix[Matrix.MSCALE_Y];
+
             final int origW = d.getIntrinsicWidth();
             final int origH = d.getIntrinsicHeight();
 
@@ -152,11 +152,8 @@ public class CropImageView extends AppCompatImageView {
                         new Point(origW / 4f * 3, origH / 4f * 3),
                         new Point(origW / 4f * 3, origH / 4f),
                 };
-                for (BadCornerPtsListener listener : mBadCornerPtsListeners) {
-                    listener.haveBadCornerPts();
-                }
+                mBadCornerPtsListener.haveBadCornerPts();
             }
-
 
             for (Point p : cornerPts) {
                 p.x = (p.x * scaleX) + workRect.left;
@@ -170,8 +167,8 @@ public class CropImageView extends AppCompatImageView {
 
             magnifierBmp = Bitmap.createBitmap(magnifierRadius, magnifierRadius, Bitmap.Config.ARGB_8888);
             magnifierCanvas = new Canvas(magnifierBmp);
-
         }
+
     }
 
     private void initAttrs(Context context, AttributeSet attrs) {
@@ -214,7 +211,7 @@ public class CropImageView extends AppCompatImageView {
         if (isCornerPtsInvalid())
             return;
 
-        initOnce();
+        initWorkRect();
 
         drawCropRect(canvas);
         drawMagnifier(canvas);
@@ -434,8 +431,8 @@ public class CropImageView extends AppCompatImageView {
         };
     }
 
-    public void addBadCornerPtsListener(BadCornerPtsListener listener) {
-        mBadCornerPtsListeners.add(listener);
+    public void setOnBadCornerPtsListener(@NonNull BadCornerPtsListener listener) {
+        mBadCornerPtsListener = listener;
     }
 
     public interface BadCornerPtsListener {

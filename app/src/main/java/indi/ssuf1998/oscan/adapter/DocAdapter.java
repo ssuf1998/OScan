@@ -34,16 +34,12 @@ public class DocAdapter extends RecyclerView.Adapter<DocAdapter.VH> {
 
     @Override
     public void onBindViewHolder(@NonNull VH holder, int position) {
-        holder.getBinding().docTitle.setText(docList.get(position).getTitle());
+        holder.binding.docTitle.setText(docList.get(position).getTitle());
 
     }
 
     public static class VH extends RecyclerView.ViewHolder {
-        private final DocLayoutBinding binding;
-
-        public DocLayoutBinding getBinding() {
-            return binding;
-        }
+        public final DocLayoutBinding binding;
 
         public VH(@NonNull DocLayoutBinding binding) {
             super(binding.getRoot());

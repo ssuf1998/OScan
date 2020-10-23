@@ -8,7 +8,7 @@ public class Const {
     public static int MAGNIFIER_RIGHT_TOP = 2;
     public static int MAGNIFIER_CENTER = 3;
 
-    public static int D_STROKE_WIDTH = 8;
+    public static int D_STROKE_WIDTH = 6;
     public static int D_CORNER_PTS_COLOR = Color.WHITE;
     public static int D_CORNER_PTS_RADIUS = 36;
     public static int D_EDGE_COLOR = Color.WHITE;

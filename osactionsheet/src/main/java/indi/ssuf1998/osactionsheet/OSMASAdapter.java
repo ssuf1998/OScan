@@ -40,18 +40,18 @@ class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
     public void onBindViewHolder(@NonNull VH holder, int position) {
         final OSMASItem item = items.get(position);
         if (item.getItemIcon() != null) {
-            holder.getBinding().OSMASItemIcon.setImageDrawable(item.getItemIcon());
+            holder.binding.OSMASItemIcon.setImageDrawable(item.getItemIcon());
         } else {
-            holder.getBinding().OSMASItemIcon.setVisibility(View.GONE);
+            holder.binding.OSMASItemIcon.setVisibility(View.GONE);
         }
-        holder.getBinding().OSMASItemText.setText(item.getItemText());
+        holder.binding.OSMASItemText.setText(item.getItemText());
         if (item.getItemTextColor() != 0) {
-            holder.getBinding().OSMASItemText.setTextColor(item.getItemTextColor());
-            holder.getBinding().OSMASItemIcon.setImageTintList(
+            holder.binding.OSMASItemText.setTextColor(item.getItemTextColor());
+            holder.binding.OSMASItemIcon.setImageTintList(
                     ColorStateList.valueOf(item.getItemTextColor()));
         }
-        holder.getBinding().OSMASItemText.setTypeface(
-                holder.getBinding().OSMASItemText.getTypeface(),
+        holder.binding.OSMASItemText.setTypeface(
+                holder.binding.OSMASItemText.getTypeface(),
                 item.getTypefaceStyle()
         );
     }
@@ -66,11 +66,7 @@ class OSMASAdapter extends RecyclerView.Adapter<OSMASAdapter.VH> {
     }
 
     public static class VH extends RecyclerView.ViewHolder {
-        private final MenuActionSheetItemLayoutBinding binding;
-
-        public MenuActionSheetItemLayoutBinding getBinding() {
-            return binding;
-        }
+        public final MenuActionSheetItemLayoutBinding binding;
 
         public VH(@NonNull MenuActionSheetItemLayoutBinding binding) {
             super(binding.getRoot());

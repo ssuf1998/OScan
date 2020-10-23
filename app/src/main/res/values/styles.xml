@@ -12,8 +12,9 @@
         <item name="android:statusBarColor">@color/colorPrimary</item>
     </style>
 
-    <style name="SplashActivity" parent="MainActivity">
+    <style name="SplashActivity" parent="AppTheme">
     </style>
+
 
     <style name="ScanActivity" parent="AppTheme">
         <item name="android:windowLightStatusBar">false</item>

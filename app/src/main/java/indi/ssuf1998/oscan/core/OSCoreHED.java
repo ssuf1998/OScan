@@ -3,11 +3,13 @@ package indi.ssuf1998.oscan.core;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -22,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -321,32 +324,76 @@ public class OSCoreHED {
     }
 
     // https://zhuanlan.zhihu.com/p/64025334
+    // https://stackoverflow.com/questions/38285229/calculating-aspect-ratio-of-perspective-transform-destination-image
+    // http://research.microsoft.com/en-us/um/people/zhang/papers/tr03-39.pdf
     public OSCoreHED clipThenTransform(Point[] clipPts) {
-        final Point tl = clipPts[0];
-        final Point tr = clipPts[1];
-        final Point br = clipPts[2];
-        final Point bl = clipPts[3];
+        final int u0 = resMat.cols() / 2,
+                v0 = resMat.rows() / 2;
 
-        final double widthA = Math.sqrt(Math.pow(br.x - bl.x, 2) + Math.pow(br.y - bl.y, 2));
-        final double widthB = Math.sqrt(Math.pow(tr.x - tl.x, 2) + Math.pow(tr.y - tl.y, 2));
-        final double maxWidth = Math.max((int) widthA, (int) widthB);
+        // zigzag order, clipPts is clockwise
+        final double m1x = clipPts[0].x - u0;
+        final double m1y = clipPts[0].y - v0;
+        final double m2x = clipPts[1].x - u0;
+        final double m2y = clipPts[1].y - v0;
+        final double m3x = clipPts[3].x - u0;
+        final double m3y = clipPts[3].y - v0;
+        final double m4x = clipPts[2].x - u0;
+        final double m4y = clipPts[2].y - v0;
 
-        final double heightA = Math.sqrt(Math.pow(tr.x - br.x, 2) + Math.pow(tr.y - br.y, 2));
-        final double heightB = Math.sqrt(Math.pow(tl.x - bl.x, 2) + Math.pow(tl.y - bl.y, 2));
-        final double maxHeight = Math.max((int) heightA, (int) heightB);
+        final double k2 = ((m1y - m4y) * m3x - (m1x - m4x) * m3y + m1x * m4y - m1y * m4x) /
+                ((m2y - m4y) * m3x - (m2x - m4x) * m3y + m2x * m4y - m2y * m4x);
+
+        final double k3 = ((m1y - m4y) * m2x - (m1x - m4x) * m2y + m1x * m4y - m1y * m4x) /
+                ((m3y - m4y) * m2x - (m3x - m4x) * m2y + m3x * m4y - m3y * m4x);
+
+        final double fSquare =
+                -((k3 * m3y - m1y) * (k2 * m2y - m1y) + (k3 * m3x - m1x) * (k2 * m2x - m1x)) /
+                        ((k3 - 1) * (k2 - 1));
+
+        final double realRatio;
+        if (k2 == 1 && k3 == 1) {
+            realRatio = Math.sqrt(
+                    (Math.pow((m2y - m1y), 2) + Math.pow((m2x - m1x), 2)) /
+                            (Math.pow((m3y - m1y), 2) + Math.pow((m3x - m1x), 2)));
+        } else {
+            realRatio = Math.sqrt(
+                    (Math.pow((k2 - 1), 2) + Math.pow((k2 * m2y - m1y), 2) / fSquare + Math.pow((k2 * m2x - m1x), 2) / fSquare) /
+                            (Math.pow((k3 - 1), 2) + Math.pow((k3 * m3y - m1y), 2) / fSquare + Math.pow((k3 * m3x - m1x), 2) / fSquare)
+            );
+        }
+
+
+        final double w1 = Math.sqrt(Math.pow(clipPts[0].x - clipPts[1].x, 2) + Math.pow(clipPts[0].y - clipPts[1].y, 2));
+        final double w2 = Math.sqrt(Math.pow(clipPts[3].x - clipPts[2].x, 2) + Math.pow(clipPts[3].y - clipPts[2].y, 2));
+        final double w = Math.max(w1, w2);
+
+        final double h1 = Math.sqrt(Math.pow(clipPts[0].x - clipPts[3].x, 2) + Math.pow(clipPts[0].y - clipPts[3].y, 2));
+        final double h2 = Math.sqrt(Math.pow(clipPts[1].x - clipPts[2].x, 2) + Math.pow(clipPts[1].y - clipPts[2].y, 2));
+        final double h = Math.max(h1, h2);
+
+        final double visibleRatio = w / h;
+
+        final int realW, realH;
+        if (realRatio < visibleRatio) {
+            realW = (int) w;
+            realH = (int) (w / realRatio);
+        } else {
+            realW = (int) (h * realRatio);
+            realH = (int) h;
+        }
 
         final MatOfPoint2f dst = new MatOfPoint2f(
                 new Point(0, 0),
-                new Point(maxWidth - 1, 0),
-                new Point(maxWidth - 1, maxHeight - 1),
-                new Point(0, maxHeight - 1)
+                new Point(realW, 0),
+                new Point(realW, realH),
+                new Point(0, realH)
         );
 
+        final MatOfPoint2f clipPtsMat = new MatOfPoint2f(clipPts);
+        final Mat transMat = Imgproc.getPerspectiveTransform(clipPtsMat, dst);
 
-        MatOfPoint2f clipPtsMat = new MatOfPoint2f(clipPts);
-        final Mat getMat = Imgproc.getPerspectiveTransform(clipPtsMat, dst);
-
-        Imgproc.warpPerspective(resMat, procMat, getMat, new Size(maxWidth, maxHeight));
+        Imgproc.warpPerspective(resMat, procMat,
+                transMat, new Size(realW, realH));
 
         return this;
     }
@@ -366,6 +413,66 @@ public class OSCoreHED {
                         Imgproc.MARKER_CROSS, 64, 6);
             }
         }
+
+        return this;
+    }
+
+    public OSCoreHED removeBg(int intensity) {
+        final int validIntensity = intensity % 2 == 0 ? intensity + 1 : intensity;
+        final Mat tmp = procMat.clone();
+        Imgproc.GaussianBlur(tmp, tmp, new Size(intensity, intensity), 0);
+        Core.divide(procMat, tmp, procMat, 255);
+
+        return this;
+    }
+
+    public OSCoreHED binaryThruHist(float hold) {
+        // hold尽量小于等于0.1，保留太多黑色像素会导致整个图像显得很脏
+        // 为啥hold需要这么小？在一张文档图像中，黑色像素的占比往往很小
+        if (procMat.channels() != 1)
+            Imgproc.cvtColor(procMat, procMat, Imgproc.COLOR_BGR2GRAY);
+
+        final Mat hist = new Mat();
+        Imgproc.calcHist(Collections.singletonList(procMat),
+                new MatOfInt(0), new Mat(),
+                hist, new MatOfInt(256), new MatOfFloat(0, 256));
+        Core.divide(hist, new Scalar(procMat.total()), hist);
+
+        float accumulate = 0;
+        int threshold = 255;
+        for (int i = 0; i < hist.rows(); i++) {
+            accumulate += hist.get(i, 0)[0];
+            if (accumulate > hold) {
+                threshold = i;
+                break;
+            }
+        }
+
+        Imgproc.threshold(procMat, procMat, threshold, 255, Imgproc.THRESH_BINARY);
+
+        return this;
+    }
+
+    public OSCoreHED greyWorld() {
+        List<Mat> bgrMat = new ArrayList<>();
+
+        Core.split(procMat, bgrMat);
+
+        final double b, g, r;
+        b = Core.mean(bgrMat.get(0)).val[0];
+        g = Core.mean(bgrMat.get(1)).val[0];
+        r = Core.mean(bgrMat.get(2)).val[0];
+
+        final double kB, kG, kR;
+        kB = (b + g + r) / (3 * b);
+        kG = (b + g + r) / (3 * g);
+        kR = (b + g + r) / (3 * r);
+
+        Core.multiply(bgrMat.get(0), new Scalar(kB), bgrMat.get(0));
+        Core.multiply(bgrMat.get(1), new Scalar(kG), bgrMat.get(1));
+        Core.multiply(bgrMat.get(2), new Scalar(kR), bgrMat.get(2));
+
+        Core.merge(bgrMat, procMat);
 
         return this;
     }
@@ -395,4 +502,6 @@ public class OSCoreHED {
                 .computeBiggestRectPts()
                 .computeCornerPts();
     }
+
+
 }

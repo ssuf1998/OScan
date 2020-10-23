@@ -4,73 +4,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
     tools:context=".ProcessActivity">
 
-    <indi.ssuf1998.cropimageview.CropImageView
-        android:id="@+id/cropImgView"
+    <ImageView
+        android:id="@+id/processImgView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="@android:color/black"
         android:contentDescription="@string/crop_img_desc"
         android:scaleType="fitCenter"
-        app:cornerPtsColor="@color/colorPrimary"
-        app:edgeColor="@color/colorPrimary"
-        app:layout_constraintBottom_toTopOf="@+id/cancelTextViewBtn"
+        android:src="@drawable/test"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.8"
+        app:layout_constraintHeight_percent="0.75"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.8"
-        app:magnifierCrossColor="@color/colorPrimary"
-        app:magnifierPosition="@integer/magnifier_center">
+        app:layout_constraintWidth_percent="0.85">
 
-    </indi.ssuf1998.cropimageview.CropImageView>
+    </ImageView>
 
-    <TextView
-        android:id="@+id/cancelTextViewBtn"
+    <indi.ssuf1998.oscan.StrItemPicker
+        android:id="@+id/strItemPicker"
         android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/white_rect_ripple"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/dialog_cancel"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent='0.08'
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.5" />
-
-    <TextView
-        android:id="@+id/confirmTextViewBtn"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@drawable/white_rect_ripple"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:text="@string/dialog_confirm"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
+        android:layout_height="64dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent='0.08'
-        app:layout_constraintWidth_percent="0.5" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.5">
 
-    <LinearLayout
-        android:id="@+id/loadingView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/black">
-
-        <ProgressBar
-            style="@android:style/Widget.Material.ProgressBar"
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:layout_gravity="center" />
-    </LinearLayout>
+    </indi.ssuf1998.oscan.StrItemPicker>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

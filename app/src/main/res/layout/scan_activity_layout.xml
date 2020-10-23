@@ -58,8 +58,8 @@
 
         <ImageButton
             android:id="@+id/pickPicBtn"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="@android:color/black"
             android:contentDescription="@string/pick_pic_btn_desc"
             android:foreground="@drawable/white_ripple"
@@ -73,8 +73,8 @@
 
         <ImageButton
             android:id="@+id/switchFlashBtn"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="@android:color/black"
             android:contentDescription="@string/switch_flash_btn_desc"
             android:foreground="@drawable/white_ripple"

@@ -24,4 +24,5 @@
     <string name="err_dialog_title">错误</string>
     <string name="err_dialog_msg_pre">程序即将退出，错误信息：</string>
     <string name="bad_pts_tip">没有检测到合适的文档边界，请手动调整。</string>
+    <string name="plane_tip">手机尽量与文档保持平行。</string>
 </resources>
