@@ -60,10 +60,9 @@ dependencies {
     implementation 'com.microsoft.design:fluent-system-icons:1.1.65'
     implementation project(path: ':osactionsheet')
     implementation 'com.github.GrenderG:Toasty:1.5.0'
-
     implementation 'org.tensorflow:tensorflow-lite:2.3.0'
-
     implementation project(path: ':cropimageview')
+    implementation project(path: ':itempicker')
 }
 repositories {
     mavenCentral()

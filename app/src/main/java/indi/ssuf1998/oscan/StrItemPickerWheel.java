@@ -1,10 +1,7 @@
 package indi.ssuf1998.oscan;
 
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.animation.DecelerateInterpolator;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,35 +10,25 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import indi.ssuf1998.oscan.adapter.StrItemPickerAdapter;
 
-
-public class StrItemPicker extends RecyclerView {
+@Deprecated
+public class StrItemPickerWheel extends RecyclerView {
     private int currentIdx = 0;
-    private float autoScrollThreshold = 0.5f;
+    private float scrollBackThreshold = 0.75f;
 
-    private final ValueAnimator animator = ValueAnimator.ofFloat(0, 1);
     private int scrollXOffset = 0;
 
     private currentIdxChangedListener mCurrentIdxChangedListener;
 
-    public StrItemPicker(@NonNull Context context) {
+    public StrItemPickerWheel(@NonNull Context context) {
         this(context, null, 0);
     }
 
-    public StrItemPicker(@NonNull Context context, @Nullable AttributeSet attrs) {
+    public StrItemPickerWheel(@NonNull Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public StrItemPicker(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public StrItemPickerWheel(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-
-        animator.setDuration(300);
-        animator.setInterpolator(new DecelerateInterpolator());
-//        animator.addUpdateListener(valueAnimator -> {
-//            final float v = (float) animator.getAnimatedValue();
-//
-//
-//        });
-
     }
 
     @Override
@@ -51,26 +38,31 @@ public class StrItemPicker extends RecyclerView {
             return;
         }
 
-        final StrItemPickerAdapter adapter = (StrItemPickerAdapter) getAdapter();
-        final LinearLayoutManager mgr = (LinearLayoutManager) getLayoutManager();
-        final int wrapWidth = adapter.getItemWidth() + adapter.getAroundMarginPx() * 2;
-
         if (state == SCROLL_STATE_IDLE) {
-//            final float percent = scrollXOffset / (float) wrapWidth;
-//
-//
-//            if (percent - Math.floor(percent) >= autoScrollThreshold ) {
-//                mCurrentIdxChangedListener.changed(
-//                        currentIdx += (currentIdx + 1 >= adapter.getItemCount() ? 0 : 1),
-//                        currentIdx
-//                );
-//            } else if (percent - Math.floor(percent) <= 1 - autoScrollThreshold ) {
-//                mCurrentIdxChangedListener.changed(
-//                        currentIdx -= (currentIdx - 1 < 0 ? 0 : 1),
-//                        currentIdx
-//                );
-//            }
-//            mgr.scrollToPositionWithOffset(currentIdx, wrapWidth / 2);
+            final StrItemPickerAdapter adapter = (StrItemPickerAdapter) getAdapter();
+            final int wrapWidth = adapter.getItemWidth() + adapter.getAroundMarginPx() * 2;
+            final int overLastPosOffset = scrollXOffset % wrapWidth;
+
+            if (overLastPosOffset >= wrapWidth - wrapWidth / 2f * scrollBackThreshold &&
+                    overLastPosOffset < wrapWidth) {
+                smoothScrollBy(wrapWidth - overLastPosOffset, 0);
+            } else if (overLastPosOffset > 0 &&
+                    overLastPosOffset <= wrapWidth / 2f * scrollBackThreshold) {
+                smoothScrollBy(-overLastPosOffset, 0);
+            } else if (overLastPosOffset >= wrapWidth / 2f &&
+                    overLastPosOffset < wrapWidth - wrapWidth / 2f * scrollBackThreshold) {
+                smoothScrollBy(-overLastPosOffset, 0);
+            } else if (overLastPosOffset > wrapWidth / 2f * scrollBackThreshold &&
+                    overLastPosOffset <= wrapWidth / 2f) {
+                smoothScrollBy(wrapWidth - overLastPosOffset, 0);
+            }
+
+            final int newIdx = scrollXOffset / wrapWidth;
+            if (newIdx != currentIdx) {
+                mCurrentIdxChangedListener.changed(currentIdx,
+                        newIdx);
+                currentIdx = newIdx;
+            }
 
         }
     }
@@ -113,13 +105,13 @@ public class StrItemPicker extends RecyclerView {
         this.currentIdx = Math.max(Math.min(currentIdx, getAdapter().getItemCount() - 1), 0);
     }
 
-    public float getAutoScrollThreshold() {
-        return autoScrollThreshold;
+    public float getScrollBackThreshold() {
+        return scrollBackThreshold;
     }
 
-    public void setAutoScrollThreshold(float autoScrollThreshold) {
-        this.autoScrollThreshold = Math.max(Math.min(autoScrollThreshold, 1), 0);
-
+    public void setScrollBackThreshold(float scrollBackThreshold) {
+        // 越接近1，则越容易滚回当前值
+        this.scrollBackThreshold = Math.max(Math.min(scrollBackThreshold, 1), 0);
     }
 
     public void setOnCurrentIdxChangedListener(@NonNull currentIdxChangedListener listener) {

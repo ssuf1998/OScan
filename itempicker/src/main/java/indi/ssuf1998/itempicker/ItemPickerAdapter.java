@@ -1,25 +1,20 @@
-package indi.ssuf1998.oscan.adapter;
+package indi.ssuf1998.itempicker;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.annotation.Dimension;
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import indi.ssuf1998.oscan.R;
+import java.util.List;
 
-@Deprecated
-public class StrItemPickerAdapter extends RecyclerView.Adapter<StrItemPickerAdapter.VH> {
-    private final String[] strings;
+public class ItemPickerAdapter extends RecyclerView.Adapter<ItemPickerViewHolder> {
+    private final List<? extends View> viewList;
     private final Context context;
 
     private int aroundMarginPx = 0;
@@ -27,59 +22,48 @@ public class StrItemPickerAdapter extends RecyclerView.Adapter<StrItemPickerAdap
     private int itemWidth = -1;
     private int expandWidth = -1;
 
-    public StrItemPickerAdapter(Context context, String[] strings) {
-        this.strings = strings;
+    public ItemPickerAdapter(Context context, List<? extends View> views) {
+        this.viewList = views;
         this.context = context;
     }
 
     @NonNull
     @Override
-    public StrItemPickerAdapter.VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        LinearLayout layout = new LinearLayout(parent.getContext());
-        TextView textView = new TextView(layout.getContext());
-        layout.addView(textView);
+    public ItemPickerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        LinearLayout boxLayout = new LinearLayout(parent.getContext());
 
         if (itemWidth == -1) {
             expandWidth = Math.round(parent.getWidth() / (2 + 1 / expand));
             itemWidth = Math.round(expandWidth * (1 / expand)) - 2 * aroundMarginPx;
         }
 
-        return new VH(layout);
+        return new ItemPickerViewHolder(boxLayout);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull StrItemPickerAdapter.VH holder, int position) {
-
-        holder.layout.setLayoutParams(new ViewGroup.LayoutParams(
+    public void onBindViewHolder(@NonNull ItemPickerViewHolder holder, int position) {
+        holder.boxLayout.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
 
-
-        final TextView textView = (TextView) holder.layout.getChildAt(0);
+        final View inner = viewList.get(position);
         final LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                itemWidth,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         lp.setMargins(
                 aroundMarginPx + (position == 0 ? expandWidth : 0),
                 aroundMarginPx,
-                aroundMarginPx + (position == strings.length - 1 ? expandWidth : 0),
+                aroundMarginPx + (position == viewList.size() - 1 ? expandWidth : 0),
                 aroundMarginPx
         );
+        inner.setLayoutParams(lp);
 
-        textView.setLayoutParams(lp);
-        textView.setWidth(itemWidth);
-        textView.setBackgroundColor(Color.GRAY);
-        textView.setGravity(Gravity.CENTER);
-        textView.setText(strings[position]);
+        holder.boxLayout.addView(inner);
     }
 
     @Override
     public int getItemCount() {
-        return strings.length;
-    }
-
-    public String[] getStrings() {
-        return strings;
+        return viewList.size();
     }
 
     public void setExpand(float expand) {
@@ -98,13 +82,8 @@ public class StrItemPickerAdapter extends RecyclerView.Adapter<StrItemPickerAdap
         return itemWidth;
     }
 
-    public static class VH extends RecyclerView.ViewHolder {
-        public final LinearLayout layout;
-
-        public VH(@NonNull View itemView) {
-            super(itemView);
-            layout = (LinearLayout) itemView;
-        }
+    public List<? extends View> getViewList() {
+        return viewList;
     }
 
     private int dp2Px(@NonNull Context context, @Dimension(unit = Dimension.DP) float dp) {
@@ -112,4 +91,5 @@ public class StrItemPickerAdapter extends RecyclerView.Adapter<StrItemPickerAdap
         DisplayMetrics metrics = resources.getDisplayMetrics();
         return (int) (dp * metrics.density);
     }
+
 }

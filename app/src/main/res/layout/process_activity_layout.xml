@@ -3,29 +3,31 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:orientation="horizontal"
     android:layout_height="match_parent"
     tools:context=".ProcessActivity">
 
-    <ImageView
-        android:id="@+id/processImgView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@android:color/black"
-        android:contentDescription="@string/crop_img_desc"
-        android:scaleType="fitCenter"
-        android:src="@drawable/test"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.75"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintWidth_percent="0.85">
 
-    </ImageView>
+<!--    <ImageView-->
+<!--        android:id="@+id/processImgView"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="0dp"-->
+<!--        android:background="@android:color/black"-->
+<!--        android:contentDescription="@string/crop_img_desc"-->
+<!--        android:scaleType="fitCenter"-->
+<!--        android:src="@drawable/test"-->
+<!--        android:visibility="gone"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHeight_percent="0.75"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintWidth_percent="0.85">-->
 
-    <indi.ssuf1998.oscan.StrItemPicker
-        android:id="@+id/strItemPicker"
+<!--    </ImageView>-->
+
+    <indi.ssuf1998.itempicker.ItemPicker
+        android:id="@+id/mItemPicker"
         android:layout_width="0dp"
         android:layout_height="64dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -34,7 +36,9 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_percent="0.5">
 
-    </indi.ssuf1998.oscan.StrItemPicker>
+    </indi.ssuf1998.itempicker.ItemPicker>
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

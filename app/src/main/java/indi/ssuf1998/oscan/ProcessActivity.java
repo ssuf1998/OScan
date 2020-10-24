@@ -1,13 +1,14 @@
 package indi.ssuf1998.oscan;
 
+import android.os.Bundle;
+import android.util.Log;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Bundle;
-import android.util.Log;
-
-import indi.ssuf1998.oscan.adapter.StrItemPickerAdapter;
+import indi.ssuf1998.itempicker.ItemPickerAdapter;
+import indi.ssuf1998.itempicker.ItemPickerHelper;
 import indi.ssuf1998.oscan.databinding.ProcessActivityLayoutBinding;
 
 public class ProcessActivity extends AppCompatActivity {
@@ -47,20 +48,17 @@ public class ProcessActivity extends AppCompatActivity {
 //
 //        });
 
-        StrItemPickerAdapter adapter = new StrItemPickerAdapter(
+        ItemPickerAdapter adapter = new ItemPickerAdapter(
                 this,
-                new String[]{
+                ItemPickerHelper.viewsFromStrings(this, new String[]{
                         "无", "默认", "去除背景"
-                });
+                })
+        );
         adapter.setAroundMarginDp(4);
-        LinearLayoutManager layoutMgr = new LinearLayoutManager(this);
-        layoutMgr.setOrientation(RecyclerView.HORIZONTAL);
-        binding.strItemPicker.setLayoutManager(layoutMgr);
-        binding.strItemPicker.setAdapter(adapter);
-        binding.strItemPicker.setOnCurrentIdxChangedListener((oldIdx, newIdx) -> {
+        binding.mItemPicker.setAdapter(adapter);
+        binding.mItemPicker.setOnCurrentIdxChangedListener((oldIdx, newIdx) -> {
             Log.d("osdebug", String.format("old: %s, new: %s", oldIdx, newIdx));
         });
-
 
     }
 

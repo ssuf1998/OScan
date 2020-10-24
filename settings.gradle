@@ -1,3 +1,4 @@
+include ':itempicker'
 include ':cropimageview'
 include ':osactionsheet'
 include ':app'
