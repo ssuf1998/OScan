@@ -70,6 +70,10 @@ public class ItemPickerAdapter extends RecyclerView.Adapter<ItemPickerViewHolder
         this.expand = Math.max(Math.min(expand, 1), 0);
     }
 
+    public float getExpand() {
+        return expand;
+    }
+
     public void setAroundMarginDp(float dp) {
         this.aroundMarginPx = dp2Px(context, dp);
     }

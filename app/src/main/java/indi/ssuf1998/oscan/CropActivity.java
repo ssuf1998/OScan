@@ -6,6 +6,7 @@ import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Toast;
@@ -14,8 +15,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.opencv.core.Point;
 
+import java.util.Optional;
+
 import es.dmoral.toasty.Toasty;
 import indi.ssuf1998.oscan.core.OSCoreHED;
+import indi.ssuf1998.oscan.core.Utils;
 import indi.ssuf1998.oscan.databinding.CropActivityLayoutBinding;
 
 
@@ -23,17 +27,18 @@ public class CropActivity extends AppCompatActivity {
 
     private CropActivityLayoutBinding binding;
 
-    private final SharedBlock mBlock = SharedBlock.getInstance();
-    private Bitmap scanBmp;
+    private final CacheHelper cache = CacheHelper.getInstance();
+    private Bitmap scanBmpThumb;
     private OSCoreHED osCore;
-    private Point[] cornerPts;
 
-    private boolean pressBack = false;
+    private float thumbMultiple;
+
+    public static CropActivity outThis;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        osCore = (OSCoreHED) mBlock.getData("hed", null);
+        osCore = (OSCoreHED) cache.getData("hed");
 
         binding = CropActivityLayoutBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -43,23 +48,45 @@ public class CropActivity extends AppCompatActivity {
             bindListeners();
             runDetect();
         });
+
+        outThis = this;
     }
 
     private void initUI() {
-        binding.cropImgView.setVisibility(View.VISIBLE);
+        final Bitmap scanBmp = Optional
+                .ofNullable((Bitmap) cache.getData("scan_bmp"))
+                .orElse((Bitmap) cache.getBmpFromCache("scan_bmp_cache", this))
+                .copy(Bitmap.Config.RGB_565, true);
+        final double[] thumbSize = Utils.getAspectSize(scanBmp.getWidth(), scanBmp.getHeight(), 1536);
+        thumbMultiple = scanBmp.getWidth() / (float) thumbSize[0];
+        scanBmpThumb = Bitmap.createScaledBitmap(scanBmp, (int) thumbSize[0], (int) thumbSize[1], true);
 
-        scanBmp = (Bitmap) mBlock.getDataThenSweep("scan_bmp");
-        binding.cropImgView.setImageBitmap(scanBmp);
+        binding.cropImgView.setImageBitmap(scanBmpThumb);
+
+        new Thread(() -> {
+            cache.putBmpIntoCache("scan_bmp_cache", scanBmp, this);
+            cache.removeData("scan_bmp");
+            Runtime.getRuntime().gc();
+        }).start();
     }
 
     private void bindListeners() {
         binding.confirmTextViewBtn.setOnClickListener(view -> {
+            final Point[] cornerPts = binding.cropImgView.getCornerPts();
+
             final Bitmap bmp = osCore
-                    .clipThenTransform(binding.cropImgView.getCornerPts())
+                    .setRes(scanBmpThumb)
+                    .clipThenTransform(cornerPts)
                     .getProcBmp();
-            giveBmp2Process(bmp);
+
+            for (Point p : cornerPts) {
+                p.x *= thumbMultiple;
+                p.y *= thumbMultiple;
+            }
+
+            giveBmp2Process(bmp, cornerPts);
         });
-        binding.cancelTextViewBtn.setOnClickListener(view -> onBackPressed());
+        binding.cancelTextViewBtn.setOnClickListener(view -> finish());
 
         binding.cropImgView.setOnBadCornerPtsListener(() -> {
             final Toast toast = Toasty.warning(
@@ -72,53 +99,41 @@ public class CropActivity extends AppCompatActivity {
     }
 
     private void runDetect() {
-        new Thread(() -> {
-            cornerPts = osCore
-                    .setRes(scanBmp)
-                    .detect()
-                    .getCornerPts();
-            binding.cropImgView.setCornerPts(cornerPts);
-            osCore.sweep();
+        new Handler().post(() -> {
+            binding.cropImgView.setCornerPts(
+                    osCore
+                            .setRes(scanBmpThumb)
+                            .detect()
+                            .getCornerPts()
+            );
 
-            runOnUiThread(() -> {
-                final ObjectAnimator animator =
-                        ObjectAnimator.ofFloat(binding.loadingView, "alpha",
-                                1f, 0f);
-                animator.setDuration(500);
-                animator.start();
-                animator.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        binding.loadingView.setVisibility(View.GONE);
-                    }
-                });
+            final ObjectAnimator animator =
+                    ObjectAnimator.ofFloat(binding.loadingView, "alpha",
+                            1f, 0f);
+            animator.setDuration(500);
+            animator.start();
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    binding.loadingView.setVisibility(View.GONE);
+                }
             });
-
-        }).start();
+        });
     }
 
-    private void giveBmp2Process(Bitmap bmp) {
-        mBlock.putData("crop_bmp", bmp);
+    private void giveBmp2Process(Bitmap bmp, Point[] cornerPts) {
+        cache.putData("crop_bmp", bmp);
+        cache.putData("corner_pts", cornerPts);
         this.startActivity(new Intent(this, ProcessActivity.class));
     }
 
-
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        pressBack = true;
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        if (pressBack) {
-            binding.cropImgView.setVisibility(View.INVISIBLE);
-            binding.cropImgView.setImageBitmap(null);
-            pressBack = false;
+    protected void onDestroy() {
+        super.onDestroy();
+        osCore.sweep();
+        binding.cropImgView.setImageBitmap(null);
+        scanBmpThumb = null;
 //            虽然好像没什么大用……
-//            Runtime.getRuntime().gc();
-        }
+        Runtime.getRuntime().gc();
     }
 }

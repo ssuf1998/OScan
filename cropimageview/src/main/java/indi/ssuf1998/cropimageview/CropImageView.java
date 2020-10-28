@@ -148,9 +148,9 @@ public class CropImageView extends AppCompatImageView {
             if (cornerPtsAnyNull() || notConvex()) {
                 cornerPts = new Point[]{
                         new Point(origW / 4f, origH / 4f),
-                        new Point(origW / 4f, origH / 4f * 3),
-                        new Point(origW / 4f * 3, origH / 4f * 3),
                         new Point(origW / 4f * 3, origH / 4f),
+                        new Point(origW / 4f * 3, origH / 4f * 3),
+                        new Point(origW / 4f, origH / 4f * 3),
                 };
                 mBadCornerPtsListener.haveBadCornerPts();
             }

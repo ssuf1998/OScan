@@ -2,12 +2,14 @@ package indi.ssuf1998.oscan.core;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfInt;
@@ -17,6 +19,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.IOException;
@@ -77,10 +80,7 @@ public class OSCoreHED {
     }
 
     public Mat getProcMat() {
-        final Mat tmp = new Mat();
-        Imgproc.cvtColor(procMat, tmp, Imgproc.COLOR_BGR2RGB);
-
-        return tmp;
+        return procMat;
     }
 
     public Bitmap getProcBmp() {
@@ -105,7 +105,7 @@ public class OSCoreHED {
 
         tfInterpreter.run(inBuffer, outBuffer);
 
-        final double[] aspectSize = getAspectSize(resMat.size(), MODEL_PROC_IMG_A);
+        final double[] aspectSize = Utils.getAspectSize(resMat.size(), MODEL_PROC_IMG_A);
         final Bitmap aspectBmp = Bitmap.createScaledBitmap(
                 Utils.byteBuffer2Bmp(outBuffer, MODEL_PROC_IMG_A, MODEL_PROC_IMG_A),
                 (int) aspectSize[0], (int) aspectSize[1], false);
@@ -214,23 +214,6 @@ public class OSCoreHED {
         return ret;
     }
 
-    private double[] getAspectSize(Size size, int longest) {
-        double w = size.width;
-        double h = size.height;
-
-        final double ratio = w / h;
-
-        if (w >= h) {
-            w = longest;
-            h = w / ratio;
-        } else {
-            h = longest;
-            w = h * ratio;
-        }
-
-        return new double[]{w, h};
-    }
-
     public OSCoreHED computeBiggestRectPts() {
         final ArrayList<MatOfPoint> contours = new ArrayList<>();
         final Mat hierarchy = new Mat();
@@ -257,13 +240,18 @@ public class OSCoreHED {
 
         biggestRectPts = hullList.get(hullList.size() - 1);
 
-        final double scaleRatio = ((double) MODEL_PROC_IMG_A) / Math.max(resMat.cols(), resMat.rows());
+        if (Imgproc.contourArea(biggestRectPts) <= procMat.total() * 0.33) {
+            biggestRectPts = null;
+            return this;
+        }
+
+        final float scaleRatio = ((float) MODEL_PROC_IMG_A) / Math.max(resMat.cols(), resMat.rows());
 
         for (int r = 0; r < biggestRectPts.rows(); r++) {
             final double[] p = biggestRectPts.get(r, 0);
             biggestRectPts.put(r, 0, p[0] / scaleRatio, p[1] / scaleRatio);
-
         }
+
         return this;
     }
 
@@ -280,6 +268,9 @@ public class OSCoreHED {
     }
 
     public OSCoreHED computeCornerPts() {
+        if (biggestRectPts == null)
+            return this;
+
         final List<Point> biggestHullPts = biggestRectPts.toList();
         final int len = biggestHullPts.size();
 
@@ -331,37 +322,36 @@ public class OSCoreHED {
                 v0 = resMat.rows() / 2;
 
         // zigzag order, clipPts is clockwise
-        final double m1x = clipPts[0].x - u0;
-        final double m1y = clipPts[0].y - v0;
-        final double m2x = clipPts[1].x - u0;
-        final double m2y = clipPts[1].y - v0;
-        final double m3x = clipPts[3].x - u0;
-        final double m3y = clipPts[3].y - v0;
-        final double m4x = clipPts[2].x - u0;
-        final double m4y = clipPts[2].y - v0;
+        final float m1x = (float) (clipPts[0].x - u0);
+        final float m1y = (float) (clipPts[0].y - v0);
+        final float m2x = (float) (clipPts[1].x - u0);
+        final float m2y = (float) (clipPts[1].y - v0);
+        final float m3x = (float) (clipPts[3].x - u0);
+        final float m3y = (float) (clipPts[3].y - v0);
+        final float m4x = (float) (clipPts[2].x - u0);
+        final float m4y = (float) (clipPts[2].y - v0);
 
-        final double k2 = ((m1y - m4y) * m3x - (m1x - m4x) * m3y + m1x * m4y - m1y * m4x) /
+        final float k2 = ((m1y - m4y) * m3x - (m1x - m4x) * m3y + m1x * m4y - m1y * m4x) /
                 ((m2y - m4y) * m3x - (m2x - m4x) * m3y + m2x * m4y - m2y * m4x);
 
-        final double k3 = ((m1y - m4y) * m2x - (m1x - m4x) * m2y + m1x * m4y - m1y * m4x) /
+        final float k3 = ((m1y - m4y) * m2x - (m1x - m4x) * m2y + m1x * m4y - m1y * m4x) /
                 ((m3y - m4y) * m2x - (m3x - m4x) * m2y + m3x * m4y - m3y * m4x);
 
-        final double fSquare =
+        final float fSquare =
                 -((k3 * m3y - m1y) * (k2 * m2y - m1y) + (k3 * m3x - m1x) * (k2 * m2x - m1x)) /
                         ((k3 - 1) * (k2 - 1));
 
-        final double realRatio;
+        final float realRatio;
+
         if (k2 == 1 && k3 == 1) {
-            realRatio = Math.sqrt(
+            realRatio = (float) Math.sqrt(
+                    (Math.pow((k2 - 1), 2) + Math.pow((k2 * m2y - m1y), 2) / fSquare + Math.pow((k2 * m2x - m1x), 2) / fSquare) /
+                            (Math.pow((k3 - 1), 2) + Math.pow((k3 * m3y - m1y), 2) / fSquare + Math.pow((k3 * m3x - m1x), 2) / fSquare));
+        } else {
+            realRatio = (float) Math.sqrt(
                     (Math.pow((m2y - m1y), 2) + Math.pow((m2x - m1x), 2)) /
                             (Math.pow((m3y - m1y), 2) + Math.pow((m3x - m1x), 2)));
-        } else {
-            realRatio = Math.sqrt(
-                    (Math.pow((k2 - 1), 2) + Math.pow((k2 * m2y - m1y), 2) / fSquare + Math.pow((k2 * m2x - m1x), 2) / fSquare) /
-                            (Math.pow((k3 - 1), 2) + Math.pow((k3 * m3y - m1y), 2) / fSquare + Math.pow((k3 * m3x - m1x), 2) / fSquare)
-            );
         }
-
 
         final double w1 = Math.sqrt(Math.pow(clipPts[0].x - clipPts[1].x, 2) + Math.pow(clipPts[0].y - clipPts[1].y, 2));
         final double w2 = Math.sqrt(Math.pow(clipPts[3].x - clipPts[2].x, 2) + Math.pow(clipPts[3].y - clipPts[2].y, 2));
@@ -371,7 +361,7 @@ public class OSCoreHED {
         final double h2 = Math.sqrt(Math.pow(clipPts[1].x - clipPts[2].x, 2) + Math.pow(clipPts[1].y - clipPts[2].y, 2));
         final double h = Math.max(h1, h2);
 
-        final double visibleRatio = w / h;
+        final float visibleRatio = (float) w / (float) h;
 
         final int realW, realH;
         if (realRatio < visibleRatio) {
@@ -389,17 +379,12 @@ public class OSCoreHED {
                 new Point(0, realH)
         );
 
-        final MatOfPoint2f clipPtsMat = new MatOfPoint2f(clipPts);
-        final Mat transMat = Imgproc.getPerspectiveTransform(clipPtsMat, dst);
+        final Mat transMat = Imgproc.getPerspectiveTransform(new MatOfPoint2f(clipPts), dst);
 
         Imgproc.warpPerspective(resMat, procMat,
                 transMat, new Size(realW, realH));
 
         return this;
-    }
-
-    public OSCoreHED clipThenTransform() {
-        return clipThenTransform(cornerPts);
     }
 
     public OSCoreHED drawMarks() {
@@ -418,9 +403,14 @@ public class OSCoreHED {
     }
 
     public OSCoreHED removeBg(int intensity) {
+        // 1024的用25就差不多
+        // 最好用一个1024的做预览图
+        // 最后一步保存中用25乘上一个放大系数
+        // 这个放大系数确实不好确定，暂时就凭感觉吧，
+        // 直接乘上一个缩放比例也不合适，高斯滤镜应该不是线性的
         final int validIntensity = intensity % 2 == 0 ? intensity + 1 : intensity;
         final Mat tmp = procMat.clone();
-        Imgproc.GaussianBlur(tmp, tmp, new Size(intensity, intensity), 0);
+        Imgproc.GaussianBlur(tmp, tmp, new Size(validIntensity, validIntensity), 0);
         Core.divide(procMat, tmp, procMat, 255);
 
         return this;
@@ -453,8 +443,9 @@ public class OSCoreHED {
         return this;
     }
 
+    @Deprecated
     public OSCoreHED greyWorld() {
-        List<Mat> bgrMat = new ArrayList<>();
+        final List<Mat> bgrMat = new ArrayList<>();
 
         Core.split(procMat, bgrMat);
 
@@ -474,6 +465,48 @@ public class OSCoreHED {
 
         Core.merge(bgrMat, procMat);
 
+        return this;
+    }
+
+    public OSCoreHED adjustContrastNBright(float c, float beta) {
+        // c is in [-1,1] helping calculate the contrast factor
+        // beta is in [-1,1] standing for brightness
+        final float k = (float) Math.tan((45 + 44 * c) / 180 * Math.PI);
+        final Mat lookUpTable = new Mat(1, 256, CvType.CV_8U);
+        final byte[] lookUpTableData = new byte[(int) (lookUpTable.total() * lookUpTable.channels())];
+        for (int i = 0; i < lookUpTable.cols(); i++) {
+            lookUpTableData[i] = saturate(((float) i - 127.5 * (1 - beta)) * k + 127.5 * (1 + beta));
+        }
+        lookUpTable.put(0, 0, lookUpTableData);
+        Core.LUT(procMat, lookUpTable, procMat);
+
+        return this;
+    }
+
+    public OSCoreHED adjustSaturate(float mul) {
+        // 0.5-1.5
+
+        final List<Mat> hsvMat = new ArrayList<>();
+        final Mat hsvImg = new Mat();
+        Imgproc.cvtColor(procMat, hsvImg, Imgproc.COLOR_BGR2HSV);
+
+        Core.split(hsvImg, hsvMat);
+        Core.multiply(hsvMat.get(1), new Scalar(mul), hsvMat.get(1));
+        Core.merge(hsvMat, hsvImg);
+
+        Imgproc.cvtColor(hsvImg, procMat, Imgproc.COLOR_HSV2BGR);
+
+        return this;
+    }
+
+    private byte saturate(double val) {
+        int iVal = (int) Math.round(val);
+        iVal = Math.min(Math.max(iVal, 0), 255);
+        return (byte) iVal;
+    }
+
+    public OSCoreHED colorCorrect() {
+        Imgproc.cvtColor(procMat, procMat, Imgproc.COLOR_RGB2BGR);
         return this;
     }
 
@@ -502,6 +535,4 @@ public class OSCoreHED {
                 .computeBiggestRectPts()
                 .computeCornerPts();
     }
-
-
 }

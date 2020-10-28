@@ -63,6 +63,7 @@ dependencies {
     implementation 'org.tensorflow:tensorflow-lite:2.3.0'
     implementation project(path: ':cropimageview')
     implementation project(path: ':itempicker')
+    implementation project(path: ':touchpicker')
 }
 repositories {
     mavenCentral()

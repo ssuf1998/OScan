@@ -1,3 +1,4 @@
+include ':touchpicker'
 include ':itempicker'
 include ':cropimageview'
 include ':osactionsheet'

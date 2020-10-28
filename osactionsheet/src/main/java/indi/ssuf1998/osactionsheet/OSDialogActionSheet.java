@@ -23,8 +23,8 @@ public class OSDialogActionSheet extends OSActionSheet {
                                int dialogMode, String confirmBtnText, String cancelBtnText) {
         super(OSASTitle, OSASSubTitle);
         this.dialogMode = dialogMode;
-        this.cancelBtnText = confirmBtnText;
-        this.confirmBtnText = cancelBtnText;
+        this.confirmBtnText = confirmBtnText;
+        this.cancelBtnText = cancelBtnText;
     }
 
     public OSDialogActionSheet(String OSASTitle, int dialogMode) {
@@ -71,7 +71,7 @@ public class OSDialogActionSheet extends OSActionSheet {
         }
 
         if (!cancelBtnText.isEmpty()) {
-            binding.confirmBtn.setText(cancelBtnText);
+            binding.cancelBtn.setText(cancelBtnText);
         }
     }
 

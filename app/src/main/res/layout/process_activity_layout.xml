@@ -3,42 +3,137 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:orientation="horizontal"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="horizontal"
     tools:context=".ProcessActivity">
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:padding="12dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-<!--    <ImageView-->
-<!--        android:id="@+id/processImgView"-->
-<!--        android:layout_width="0dp"-->
-<!--        android:layout_height="0dp"-->
-<!--        android:background="@android:color/black"-->
-<!--        android:contentDescription="@string/crop_img_desc"-->
-<!--        android:scaleType="fitCenter"-->
-<!--        android:src="@drawable/test"-->
-<!--        android:visibility="gone"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintHeight_percent="0.75"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintWidth_percent="0.85">-->
+        <ImageButton
+            android:id="@+id/backScan"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@android:color/black"
+            android:foreground="@drawable/white_ripple"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fluent_camera_24_filled"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-<!--    </ImageView>-->
+        <ImageButton
+            android:id="@+id/backCrop"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="24dp"
+            android:background="@android:color/black"
+            android:foreground="@drawable/white_ripple"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fluent_crop_24_filled"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/backScan"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <indi.ssuf1998.itempicker.ItemPicker
-        android:id="@+id/mItemPicker"
+        <ImageButton
+            android:id="@+id/rotateBtn"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginHorizontal="24dp"
+            android:background="@android:color/black"
+            android:foreground="@drawable/white_ripple"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fluent_arrow_rotate_clockwise_24_filled"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/saveBtn"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageButton
+            android:id="@+id/saveBtn"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@android:color/black"
+            android:foreground="@drawable/white_ripple"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_fluent_save_24_filled"
+            android:tint="@android:color/white"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/processImgView"
         android:layout_width="0dp"
-        android:layout_height="64dp"
+        android:layout_height="0dp"
+        android:background="@android:color/black"
+        android:contentDescription="@string/proc_img_desc"
+        android:scaleType="fitCenter"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.75"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.85">
+
+    </ImageView>
+
+    <TextView
+        android:id="@+id/attrProgressText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:shadowColor="#BF000000"
+        android:shadowRadius="12"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/processImgView"
+        app:layout_constraintEnd_toEndOf="@id/processImgView"
+        app:layout_constraintStart_toStartOf="@id/processImgView"
+        app:layout_constraintTop_toTopOf="@id/processImgView" />
+
+    <indi.ssuf1998.touchpicker.TouchPickerView
+        android:id="@+id/mTouchPickerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:arrowColor="#666"
+        app:layout_constraintBottom_toBottomOf="@id/processImgView"
+        app:layout_constraintEnd_toEndOf="@id/processImgView"
+        app:layout_constraintStart_toStartOf="@id/processImgView"
+        app:layout_constraintTop_toTopOf="@id/processImgView"
+        app:menuBgColor="@android:color/white"
+        app:menuItemTextAppearance="@style/ItemTextAppearance"
+        app:menuWidthPercent="0.6"
+        app:pickedOneBgColor="@color/colorPrimary"
+        app:pickedOneTextAppearance="@style/PickedOneTextAppearance">
+
+    </indi.ssuf1998.touchpicker.TouchPickerView>
+
+    <indi.ssuf1998.itempicker.ItemPickerView
+        android:id="@+id/mItemPicker"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="4:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/processImgView"
         app:layout_constraintWidth_percent="0.5">
 
-    </indi.ssuf1998.itempicker.ItemPicker>
-
-
-
+    </indi.ssuf1998.itempicker.ItemPickerView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

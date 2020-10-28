@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <indi.ssuf1998.itempicker.ItemPicker
+        android:id="@+id/wheel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never">
+
+    </indi.ssuf1998.itempicker.ItemPicker>
+
+    <ImageView
+        android:id="@+id/mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="mask">
+
+    </ImageView>
+
+</merge>

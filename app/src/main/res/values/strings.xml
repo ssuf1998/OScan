@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OScan</string>
-    <string name="bottom_nav_home">主页</string>
-    <string name="bottom_nav_more">更多</string>
-    <string name="bottom_nav_scan">扫描</string>
+    <string name="bottom_nav_home">主&#12288;页</string>
+    <string name="bottom_nav_more">更&#12288;多</string>
+    <string name="bottom_nav_scan">扫&#12288;描</string>
     <string name="scan_action_sheet_doc">文档</string>
     <string name="scan_action_sheet_card">卡片</string>
     <string name="scan_action_sheet_code">条码</string>
@@ -16,13 +16,24 @@
     <string name="crop_img_desc">裁剪图像</string>
     <string name="granted_action_sheet_title">没有获取到相机授权！</string>
     <string name="granted_action_sheet_auth">去授权</string>
-    <string name="dialog_cancel">取消</string>
+    <string name="dialog_cancel">否</string>
     <string name="granted_fail_toast">授权失败！</string>
     <string name="granted_multi_fail_toast">多次尝试授权均失败，请尝试在设置中授权。</string>
     <string name="err_file_not_find">找不到指定文件。</string>
-    <string name="dialog_confirm">确定</string>
+    <string name="dialog_confirm">是</string>
     <string name="err_dialog_title">错误</string>
     <string name="err_dialog_msg_pre">程序即将退出，错误信息：</string>
     <string name="bad_pts_tip">没有检测到合适的文档边界，请手动调整。</string>
     <string name="plane_tip">手机尽量与文档保持平行。</string>
+    <string name="effect_none">原&#12288;图</string>
+    <string name="effect_grey">黑&#12288;白</string>
+    <string name="effect_base">基&#12288;础</string>
+    <string name="effect_extract">提&#12288;取</string>
+    <string name="proc_img_desc">待处理图像</string>
+    <string name="effect_base_light">亮度</string>
+    <string name="effect_base_contrast">对比度</string>
+    <string name="effect_base_saturate">饱和度</string>
+    <string name="effect_extract_intensity">强度</string>
+    <string name="effect_extract_preserve">细节保留</string>
+    <string name="drop_dialog_title">是否舍弃当前扫描？</string>
 </resources>

@@ -16,7 +16,6 @@
     <string name="crop_img_desc">Crop area</string>
     <string name="granted_action_sheet_title">No camera authorization is obtained!</string>
     <string name="granted_action_sheet_auth">Authorize now</string>
-    <string name="dialog_cancel">Cancel</string>
     <string name="granted_fail_toast">Authorize failed!</string>
     <string name="granted_multi_fail_toast">Multiple attempts to authorize failed. Please try to authorize in the settings.</string>
     <string name="err_file_not_find">Cannot find the file.</string>
@@ -25,4 +24,16 @@
     <string name="err_dialog_msg_pre">App will exit soon, and here is error message:</string>
     <string name="bad_pts_tip">No suitable document boundaries are detected, please adjust manually.</string>
     <string name="plane_tip">Keep the phone parallel to the document as much as possible.</string>
+    <string name="effect_none">NONE</string>
+    <string name="effect_grey">GREY</string>
+    <string name="effect_base">BASE</string>
+    <string name="effect_extract">EXTRACT</string>
+    <string name="proc_img_desc">Process area</string>
+    <string name="effect_base_light">Light</string>
+    <string name="effect_base_contrast">Contrast</string>
+    <string name="effect_base_saturate">Saturate</string>
+    <string name="effect_extract_intensity">Intensity</string>
+    <string name="effect_extract_preserve">Detail</string>
+    <string name="drop_dialog_title">Discard the current image?</string>
+    <string name="dialog_cancel">NO</string>
 </resources>

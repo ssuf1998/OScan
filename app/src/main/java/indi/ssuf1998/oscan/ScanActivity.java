@@ -72,7 +72,7 @@ public class ScanActivity extends AppCompatActivity {
     private Camera camera;
     private Size captureMaxSize;
 
-    private final SharedBlock mBlock = SharedBlock.getInstance();
+    private final CacheHelper cache = CacheHelper.getInstance();
     private OSMenuActionSheet grantedMenuAS;
     private int tryTimes = 0;
 
@@ -232,7 +232,7 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     private void giveBmp2Crop(Bitmap bmp) {
-        mBlock.putData("scan_bmp", bmp);
+        cache.putData("scan_bmp", bmp);
         this.startActivity(new Intent(this, CropActivity.class));
         binding.takePicBtn.setClickable(true);
     }
@@ -420,8 +420,14 @@ public class ScanActivity extends AppCompatActivity {
                 final Uri uri = data.getData();
                 try {
                     assert uri != null;
+                    final BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = false;
+                    options.inPreferredConfig = Bitmap.Config.RGB_565;
                     final Bitmap bmp = BitmapFactory.decodeStream(
-                            this.getContentResolver().openInputStream(uri));
+                            this.getContentResolver().openInputStream(uri),
+                            null,
+                            options
+                    );
                     giveBmp2Crop(bmp);
                 } catch (FileNotFoundException e) {
                     Toasty.error(ScanActivity.this,

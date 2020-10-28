@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <LinearLayout
+        android:id="@+id/attrMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:clickable="false"
+        android:padding="12dp"
+        android:orientation="vertical"
+        android:visibility="invisible">
+
+        <ImageView
+            android:id="@+id/arrowUp"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:contentDescription="arrowUp"
+            android:padding="8dp">
+
+        </ImageView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/attrMenuList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <ImageView
+            android:id="@+id/arrowDown"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:contentDescription="arrowDown"
+            android:padding="8dp"
+            android:rotation="180">
+
+        </ImageView>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/pickedOne"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:clickable="false"
+        android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="16dp"
+        android:visibility="invisible">
+
+        <TextView
+            android:id="@+id/pickedAttrText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="pickedAttrText">
+
+        </TextView>
+
+        <TextView
+            android:id="@+id/pickedAttrValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_gravity="end"
+            android:text="pickedAttrValue">
+
+        </TextView>
+
+    </RelativeLayout>
+
+</merge>

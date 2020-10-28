@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.FileInputStream;
@@ -34,14 +35,15 @@ public class Utils {
     }
 
     public static Bitmap mat2Bmp(Mat mat) {
+        final Mat rgbMat = new Mat();
+        Imgproc.cvtColor(mat, rgbMat, Imgproc.COLOR_BGR2RGB);
         final Bitmap bmp = Bitmap.createBitmap(
                 mat.cols(),
                 mat.rows(),
-                Bitmap.Config.ARGB_8888
+                Bitmap.Config.RGB_565
         );
 
-        org.opencv.android.Utils.matToBitmap(mat, bmp);
-
+        org.opencv.android.Utils.matToBitmap(rgbMat, bmp);
         return bmp;
     }
 
@@ -102,6 +104,27 @@ public class Utils {
         bmp.setPixels(pixels, 0, width, 0, 0, width, height);
 
         return bmp;
+    }
+
+    public static double[] getAspectSize(Size size, int longest) {
+        double w = size.width;
+        double h = size.height;
+
+        final double ratio = w / h;
+
+        if (w >= h) {
+            w = longest;
+            h = w / ratio;
+        } else {
+            h = longest;
+            w = h * ratio;
+        }
+
+        return new double[]{w, h};
+    }
+
+    public static double[] getAspectSize(int w, int h, int longest) {
+        return getAspectSize(new Size(w, h), longest);
     }
 
 }

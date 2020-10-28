@@ -11,7 +11,6 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.opencv.core.Mat;
 import org.opencv.osgi.OpenCVNativeLoader;
 
 import java.io.IOException;
@@ -22,13 +21,13 @@ import indi.ssuf1998.oscan.databinding.SplashActivityLayoutBinding;
 public class SplashActivity extends AppCompatActivity {
 
     private SplashActivityLayoutBinding binding;
-    private final SharedBlock mBlock = SharedBlock.getInstance();
+    private final CacheHelper cache = CacheHelper.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final boolean isLoaded = (Boolean) mBlock.getData(Const.APP_LOAD_FINISHED, false);
+        final boolean isLoaded = (Boolean) cache.getData(Const.APP_LOAD_FINISHED, false);
 
         if (!isLoaded) {
             binding = SplashActivityLayoutBinding.inflate(getLayoutInflater());
@@ -36,7 +35,7 @@ public class SplashActivity extends AppCompatActivity {
 
             hideSystemUI();
 
-            new InitProcess().execute(SplashActivity.this, mBlock);
+            new InitProcess().execute(SplashActivity.this, cache);
         } else {
             final Intent intent = new Intent(this,
                     MainActivity.class);
@@ -63,7 +62,7 @@ public class SplashActivity extends AppCompatActivity {
         protected Object[] doInBackground(Object... objects) {
             final long start = System.currentTimeMillis();
             final Context c = (Context) objects[0];
-            final SharedBlock mBlock = (SharedBlock) objects[1];
+            final CacheHelper mBlock = (CacheHelper) objects[1];
 
             try {
                 mBlock.putData("hed", new OSCoreHED(c));
@@ -101,7 +100,7 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Object[] objects) {
             final Activity a = (Activity) objects[0];
-            final SharedBlock mBlock = (SharedBlock) objects[1];
+            final CacheHelper mBlock = (CacheHelper) objects[1];
 
             final Intent intent = new Intent(a,
                     MainActivity.class);

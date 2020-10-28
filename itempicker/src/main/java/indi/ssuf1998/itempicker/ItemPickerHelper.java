@@ -19,7 +19,4 @@ public class ItemPickerHelper {
         return texts;
     }
 
-    public static List<TextView> viewsFromStrings(Context context, List<String> strings) {
-        return viewsFromStrings(context, (String[]) strings.toArray());
-    }
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TouchPickerView">
+        <attr name="arrowDrawable" format="reference"/>
+        <attr name="arrowColor" format="color|reference"/>
+        <attr name="arrowUpRotation" format="float|reference"/>
+        <attr name="arrowDownRotation" format="float|reference"/>
+        <attr name="menuWidth" format="dimension|reference"/>
+        <attr name="menuWidthPercent" format="float|reference"/>
+        <attr name="menuBgColor" format="color|reference"/>
+        <attr name="menuItemTextAppearance" format="reference"/>
+        <attr name="pickedOneBgColor" format="color|reference"/>
+        <attr name="pickedOneTextAppearance" format="reference"/>
+    </declare-styleable>
+
+</resources>

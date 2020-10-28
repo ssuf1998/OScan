@@ -29,6 +29,8 @@ public class OSActionSheet extends BottomSheetDialogFragment {
     private boolean immersiveMode = true;
     private boolean showing = false;
 
+    private int initBottomPadding = 0;
+
     public OSActionSheet(String OSASTitle, String OSASSubTitle) {
         this.OSASTitle = OSASTitle.toUpperCase();
         this.OSASSubTitle = OSASSubTitle;
@@ -75,11 +77,14 @@ public class OSActionSheet extends BottomSheetDialogFragment {
             if (immersiveMode && immersiveModeXML &&
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
 
+                if (initBottomPadding == 0)
+                    initBottomPadding = binding.OSASView.getPaddingBottom();
+
                 binding.OSASView.setPadding(
                         binding.OSASView.getPaddingLeft(),
                         binding.OSASView.getPaddingTop(),
                         binding.OSASView.getPaddingRight(),
-                        getNavBarHeightInPixel() + binding.OSASView.getPaddingBottom());
+                        getNavBarHeightInPixel() + initBottomPadding);
 
                 win.findViewById(R.id.container).setFitsSystemWindows(false);
 

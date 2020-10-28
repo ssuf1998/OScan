@@ -39,7 +39,11 @@ public class Utils {
         final ByteBuffer buffer = img.getPlanes()[0].getBuffer();
         final byte[] bytes = new byte[buffer.capacity()];
         buffer.get(bytes);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, null);
+
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = false;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
     }
 
     public static void setText4Toasty(Toast toast, String newStr) {
